@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quem Quer Saber Mais? — Fase 1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600&display=swap');
+:root{--gold:#FFD700;--gold-dark:#B8860B;--blue-deep:#07091f;--blue-mid:#0d1b4b;--blue-bright:#1a3a8f;--silver:#C0C0C0;--correct:#22c55e;--wrong:#ef4444;--easy:#4ade80;--medium:#facc15;--hard:#f97316;--glow:0 0 20px rgba(255,215,0,0.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--blue-deep);color:white;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(1px 1px at 10% 20%,white 0%,transparent 100%),radial-gradient(1px 1px at 30% 60%,white 0%,transparent 100%),radial-gradient(1px 1px at 50% 10%,white 0%,transparent 100%),radial-gradient(1px 1px at 70% 80%,white 0%,transparent 100%),radial-gradient(1px 1px at 85% 35%,white 0%,transparent 100%),radial-gradient(1px 1px at 20% 90%,white 0%,transparent 100%),radial-gradient(1px 1px at 60% 45%,white 0%,transparent 100%),radial-gradient(2px 2px at 15% 50%,rgba(255,215,0,.5) 0%,transparent 100%),radial-gradient(2px 2px at 75% 25%,rgba(255,215,0,.3) 0%,transparent 100%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.logo{text-align:center}
+.logo h1{font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2.4rem);font-weight:900;background:linear-gradient(135deg,var(--gold) 0%,#fff 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(255,215,0,.5));letter-spacing:2px}
+.logo p{color:var(--silver);font-size:.8rem;margin-top:4px;letter-spacing:3px;text-transform:uppercase}
+.screen{width:100%;display:none}
+.screen.active{display:flex;flex-direction:column;align-items:center;gap:12px}
+.card{background:linear-gradient(135deg,rgba(13,27,75,.95) 0%,rgba(26,58,143,.35) 100%);border:1px solid rgba(255,215,0,.25);border-radius:14px;padding:22px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,215,0,.08)}
+.btn{padding:12px 28px;border-radius:50px;font-size:.95rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;letter-spacing:.4px}
+.btn-gold{background:linear-gradient(135deg,var(--gold-dark),var(--gold));color:var(--blue-deep);box-shadow:var(--glow)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(255,215,0,.6)}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;color:var(--gold);border:2px solid var(--gold)}
+.btn-outline:hover{background:rgba(255,215,0,.1)}
+.btn-sm{padding:7px 18px;font-size:.82rem}
+/* STEP SELECTORS */
+.step-title{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;text-align:center}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}
+@media(max-width:560px){.grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}}
+.sel-card{background:linear-gradient(135deg,rgba(13,27,75,.9),rgba(26,58,143,.3));border:2px solid rgba(255,215,0,.18);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .22s}
+.sel-card:hover,.sel-card.active{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--glow)}
+.sel-card .icon{font-size:2rem;margin-bottom:8px}
+.sel-card h3{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);margin-bottom:4px}
+.sel-card p{font-size:.73rem;color:var(--silver);line-height:1.35}
+/* DIFFICULTY BADGES */
+.diff-easy{color:var(--easy);border-color:var(--easy)}
+.diff-medium{color:var(--medium);border-color:var(--medium)}
+.diff-hard{color:var(--hard);border-color:var(--hard)}
+.diff-badge{display:inline-block;padding:3px 12px;border-radius:50px;border:1px solid;font-size:.72rem;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+/* GAME UI */
+.prize-display{text-align:center}
+.prize-display .qlevel{color:var(--silver);font-size:.75rem;letter-spacing:2px;text-transform:uppercase}
+.qtimer{text-align:center;font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);margin:6px 0 2px;transition:color .3s}
+.qtimer.warn{color:#ff5050}
+
+/* Duel split-screen */
+.duel-wrap{display:flex;flex-direction:column;width:100%;height:calc(100vh - 90px);position:fixed;top:90px;left:0;background:var(--blue-deep);z-index:5}
+.duel-half{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px 16px;width:100%;box-sizing:border-box;overflow:auto}
+.duel-top{transform:rotate(180deg)}
+.duel-score{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem;text-align:center}
+.duel-qbox{max-width:480px}
+.duel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:480px}
+.duel-mid{height:3px;background:rgba(255,215,0,.4)}
+.duel-timer{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem}
+.duel-prog-wrap{width:90%;height:4px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-top:3px}
+.duel-prog-fill{height:100%;background:var(--gold);transition:width .3s}
+.prize-display .qprize{font-family:'Cinzel',serif;font-size:clamp(1.4rem,3.5vw,2.2rem);color:var(--gold);filter:drop-shadow(0 0 8px rgba(255,215,0,.5))}
+.qbox{background:rgba(0,0,0,.3);border:1px solid rgba(255,215,0,.18);border-radius:10px;padding:18px 20px;text-align:center;font-size:clamp(.9rem,2.3vw,1.08rem);line-height:1.65;width:100%;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%}
+@media(max-width:460px){.ans-grid{grid-template-columns:1fr}}
+.ans-btn{padding:13px 16px;background:linear-gradient(135deg,rgba(13,27,75,.95),rgba(26,58,143,.45));border:2px solid rgba(255,215,0,.25);border-radius:50px;color:white;font-size:.88rem;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:10px}
+.ans-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(255,215,0,.14)}
+.ans-btn .ltr{font-family:'Cinzel',serif;font-weight:700;color:var(--gold);font-size:.95rem;min-width:20px}
+.ans-btn.correct{background:rgba(34,197,94,.22);border-color:var(--correct)}
+.ans-btn.wrong{background:rgba(239,68,68,.22);border-color:var(--wrong)}
+.ans-btn:disabled{cursor:not-allowed}
+.lifelines{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+.ll-btn{padding:7px 14px;background:rgba(13,27,75,.8);border:2px solid rgba(255,215,0,.35);border-radius:50px;color:var(--gold);font-size:.78rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
+.ll-btn:hover:not(:disabled){background:rgba(255,215,0,.1)}
+.ll-btn:disabled{opacity:.25;cursor:not-allowed;border-color:rgba(255,255,255,.1);color:var(--silver)}
+.hint-box{background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.2);border-radius:10px;padding:14px;width:100%;text-align:center;color:var(--silver);font-size:.85rem;display:none}
+.score-bar{display:flex;justify-content:space-between;width:100%;padding:8px 0}
+.sc-item{text-align:center}
+.sc-item .lbl{font-size:.7rem;color:var(--silver);text-transform:uppercase;letter-spacing:1px}
+.sc-item .val{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold)}
+.turn-ind{text-align:center;padding:7px 18px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:50px;font-size:.82rem;color:var(--gold)}
+/* PROGRESS BAR */
+.prog-wrap{width:100%;background:rgba(255,255,255,.07);border-radius:50px;height:6px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:50px;transition:width .4s ease}
+/* RESULT */
+.res-trophy{font-size:3.5rem;text-align:center;animation:bounce 1s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.res-amount{font-family:'Cinzel',serif;font-size:clamp(1.8rem,5vw,3rem);text-align:center;background:linear-gradient(135deg,var(--gold),white,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 16px rgba(255,215,0,.5))}
+.flex-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.3),transparent)}
+.text-silver{color:var(--silver);font-size:.85rem;line-height:1.5;text-align:center}
+.confetti-piece{position:fixed;width:9px;height:9px;top:-20px;animation:fall linear forwards;border-radius:2px;z-index:999}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+/* STAT ROW */
+.stat-row{display:flex;justify-content:space-around;padding:10px 0}
+.stat-item{text-align:center}
+.stat-item .s-lbl{font-size:.7rem;color:var(--silver);text-transform:uppercase}
+.stat-item .s-val{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="logo">
+  <h1>🏆 Quem Quer Saber Mais?</h1>
+  <p>Nazir Vilar</p>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="sc-home">
+  <p class="text-silver">Escolhe o modo de jogo:</p>
+  <div class="grid-3">
+    <div class="sel-card" onclick="pickMode('solo')"><div class="icon">🧠</div><h3>Individual</h3><p>Joga sozinho e sobe na tabela</p></div>
+    <div class="sel-card" onclick="pickMode('duo')"><div class="icon">👥</div><h3>Duelo Local</h3><p>Dois jogadores, turno a turno</p></div>
+    <div class="sel-card" onclick="pickMode('treino')"><div class="icon">📚</div><h3>Treino</h3><p>Sem pontuação, estuda à vontade</p></div>
+  </div>
+</div>
+
+<!-- LEVEL SELECT -->
+<div class="screen" id="sc-level">
+  <p class="step-title">Nível de Dificuldade</p>
+  <div class="grid-3">
+    <div class="sel-card" onclick="pickLevel('easy')"><div class="icon">🟢</div><h3 style="color:var(--easy)">Fácil</h3><p>Ensino Primário<br>Perguntas básicas</p></div>
+    <div class="sel-card" onclick="pickLevel('medium')"><div class="icon">🟡</div><h3 style="color:var(--medium)">Médio</h3><p>Ensino Secundário<br>Conhecimento geral</p></div>
+    <div class="sel-card" onclick="pickLevel('hard')"><div class="icon">🔴</div><h3 style="color:var(--hard)">Difícil</h3><p>Universitário<br>Perguntas complexas</p></div>
+  </div>
+  <button class="btn btn-outline btn-sm" onclick="goScreen('home')">← Voltar</button>
+</div>
+
+<!-- CATEGORY SELECT -->
+<div class="screen" id="sc-cat">
+  <p class="step-title">Escolhe a Categoria</p>
+  <div class="grid-3" id="cat-grid"></div>
+  <div class="flex-row">
+    <button class="btn btn-outline btn-sm" onclick="goScreen('level')">← Voltar</button>
+    <button class="btn btn-gold btn-sm" id="start-btn" onclick="startGame()" disabled>Começar →</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="sc-game">
+  <div class="turn-ind" id="turn-ind" style="display:none"></div>
+  <div class="score-bar" id="score-bar" style="display:none">
+    <div class="sc-item"><div class="lbl" id="p1n">J1</div><div class="val" id="p1s">0</div></div>
+    <div class="sc-item"><div class="lbl">VS</div><div class="val" style="color:white">⚡</div></div>
+    <div class="sc-item"><div class="lbl" id="p2n">J2</div><div class="val" id="p2s">0</div></div>
+  </div>
+  <div class="prize-display">
+    <div class="qlevel" id="qlevel"></div>
+    <div class="qprize" id="qlives"></div>
+  </div>
+  <div class="qtimer" id="qtimer">⏱️ 30s</div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div class="qbox" id="qbox">
+    <span id="diff-badge"></span>
+    <span id="qtext"></span>
+  </div>
+  <div class="ans-grid" id="ans-grid"></div>
+  <div class="lifelines">
+    <button class="ll-btn" id="ll-5050" onclick="useLL('5050')">✂️ 50:50</button>
+    <button class="ll-btn" id="ll-skip" onclick="useLL('skip')">⏭️ Saltar</button>
+    <button class="ll-btn" id="ll-hint" onclick="useLL('hint')">💡 Dica</button>
+    <button class="ll-btn" id="ll-time" onclick="useLL('time')">⏱️ +30s</button>
+  </div>
+  <div class="hint-box" id="hint-box"></div>
+
+  <!-- DUEL SPLIT SCREEN -->
+  <div class="duel-wrap" id="duel-wrap" style="display:none">
+    <div class="duel-half duel-top" id="duel-top">
+      <div class="duel-score" id="duel-score-2"></div>
+      <div class="duel-timer" id="duel-timer-2">⏱️ 30s</div>
+      <div class="duel-prog-wrap"><div class="duel-prog-fill" id="duel-prog-2" style="width:0%"></div></div>
+      <div class="qbox duel-qbox"><span class="diff-badge" id="diff-badge-2"></span><span id="qtext-2"></span></div>
+      <div class="ans-grid duel-grid" id="ans-grid-2"></div>
+    </div>
+    <div class="duel-mid"></div>
+    <div class="duel-half duel-bottom" id="duel-bottom">
+      <div class="duel-score" id="duel-score-1"></div>
+      <div class="duel-timer" id="duel-timer-1">⏱️ 30s</div>
+      <div class="duel-prog-wrap"><div class="duel-prog-fill" id="duel-prog-1" style="width:0%"></div></div>
+      <div class="qbox duel-qbox"><span class="diff-badge" id="diff-badge-1"></span><span id="qtext-1"></span></div>
+      <div class="ans-grid duel-grid" id="ans-grid-1"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-outline btn-sm" onclick="confirmQuit()" style="margin-top:4px">🚪 Sair</button>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="sc-result">
+  <div class="res-trophy" id="res-trophy">🏆</div>
+  <div class="card">
+    <p class="text-silver" id="res-msg"></p>
+    <div class="divider" style="margin:12px 0"></div>
+    <div class="stat-row">
+      <div class="stat-item"><div class="s-lbl">Certas</div><div class="s-val" id="st-correct" style="color:var(--correct)">0</div></div>
+      <div class="stat-item"><div class="s-lbl">Erradas</div><div class="s-val" id="st-wrong" style="color:var(--wrong)">0</div></div>
+      <div class="stat-item"><div class="s-lbl">Saltadas</div><div class="s-val" id="st-skip" style="color:var(--silver)">0</div></div>
+    </div>
+    <div id="duo-result" style="display:none">
+      <div class="divider" style="margin:10px 0"></div>
+      <div class="stat-row" id="duo-scores"></div>
+      <p id="duo-winner" style="text-align:center;color:var(--gold);font-family:'Cinzel',serif;margin-top:8px"></p>
+    </div>
+  </div>
+  <div class="flex-row">
+    <button class="btn btn-gold" onclick="restartGame()">🔄 Jogar de Novo</button>
+    <button class="btn btn-outline" onclick="goScreen('home')">🏠 Início</button>
+  </div>
+</div>
+
+</div><!-- wrap -->
+
+<script>
+// ===== PRIZES REMOVED =====
+
+// ===== CATEGORIES =====
+const CATS=[
+  {id:'geo',name:'Geografia',icon:'🌍'},
+  {id:'hist',name:'História',icon:'📜'},
+  {id:'sci',name:'Outras Ciências',icon:'🔬'},
+  {id:'moz',name:'Moçambique',icon:'🇲🇿'},
+  {id:'math',name:'Matemática',icon:'➕'},
+  {id:'cult',name:'Cultura Geral',icon:'🎭'},
+];
+
+// ===== QUESTIONS =====
+// Format: {q, opts:[A,B,C,D], ans(0-based), hint, diff:'easy'|'medium'|'hard'}
+const QDB={
+geo:{
+easy:[
+  {q:'Qual é o maior continente do mundo?',opts:['África','Ásia','Europa','América'],ans:1,hint:'É onde ficam a China e a Índia'},
+  {q:'Qual é o maior oceano do mundo?',opts:['Atlântico','Índico','Ártico','Pacífico'],ans:3,hint:'Cobre mais de um terço da Terra'},
+  {q:'Capital de Portugal?',opts:['Porto','Lisboa','Faro','Coimbra'],ans:1,hint:'Cidade à beira do rio Tejo'},
+  {q:'Em que continente fica o Brasil?',opts:['África','Europa','América do Sul','Ásia'],ans:2,hint:'Hemisfério ocidental, sul'},
+  {q:'Qual é o rio mais longo do mundo?',opts:['Amazonas','Nilo','Zambeze','Danúbio'],ans:1,hint:'Fica em África'},
+  {q:'Qual é o deserto mais quente do mundo?',opts:['Gobi','Kalahari','Namibe','Saara'],ans:3,hint:'Norte de África'},
+  {q:'Capital do Quénia?',opts:['Mombaça','Nairóbi','Kampala','Dar es Salaam'],ans:1,hint:'Cidade da maratona africana'},
+  {q:'Qual é o menor continente?',opts:['Europa','América do Sul','Oceânia','Antárctida'],ans:2,hint:'País que é também continente'},
+  {q:'Que país tem mais habitantes?',opts:['Estados Unidos','China','Índia','Brasil'],ans:2,hint:'Ultrapassou a China em 2023'},
+  {q:'Qual é o país mais extenso de África?',opts:['Nigéria','República Democrática do Congo','Argélia','Sudão'],ans:2,hint:'No norte de África'},
+  {q:'Onde fica o Monte Evereste?',opts:['América do Sul','Europa','África','Ásia'],ans:3,hint:'Cordilheira do Himalaia'},
+  {q:'Capital da França?',opts:['Lyon','Marselha','Paris','Nice'],ans:2,hint:'Cidade da Torre Eiffel'},
+  {q:'Qual oceano banha Moçambique?',opts:['Atlântico','Pacífico','Índico','Ártico'],ans:2,hint:'Terceiro maior oceano'},
+  {q:'Quantos continentes tem o mundo?',opts:['5','6','7','8'],ans:2,hint:'África, América, Ásia, Europa, Oceânia, Antárctida, América do Norte e Sul contam como 2 ou 1'},
+  {q:'Capital da África do Sul?',opts:['Joanesburgo','Cidade do Cabo','Durban','Pretória'],ans:3,hint:'Cidade administrativa principal'},
+  {q:'Em que continente fica o Egipto?',opts:['Ásia','Europa','África','América'],ans:2,hint:'O país das pirâmides fica em África'},
+  {q:'Qual é a capital da Austrália?',opts:['Sydney','Melbourne','Camberra','Brisbane'],ans:2,hint:'Não é a mais famosa'},
+  {q:'Qual é o lago mais extenso de África?',opts:['Lago Vitória','Lago Niassa','Lago Tanganica','Lago Chade'],ans:0,hint:'Partilhado por Uganda, Quénia e Tanzânia'},
+  {q:'Em que país fica o rio Amazonas?',opts:['Colômbia','Peru','Brasil','Venezuela'],ans:2,hint:'País mais extenso da América do Sul'},
+  {q:'Qual é a capital da China?',opts:['Xangai','Hong Kong','Pequim','Cantão'],ans:2,hint:'Cidade da Grande Muralha'},
+  {q:'Qual é a capital de Moçambique?',opts:['Beira','Nampula','Maputo','Tete'],ans:2,hint:'Cidade no extremo sul do país'},
+  {q:'Em que continente fica o Japão?',opts:['Ásia','Oceânia','Europa','América'],ans:0,hint:'País do sol nascente'},
+  {q:'Qual é o país mais extenso do mundo?',opts:['China','Canadá','Rússia','Estados Unidos'],ans:2,hint:'Abrange duas partes da Ásia e Europa'},
+  {q:'Qual é a capital de Espanha?',opts:['Barcelona','Madrid','Sevilha','Valência'],ans:1,hint:'Cidade no centro da Península Ibérica'},
+  {q:'Qual é o oceano que fica entre a América e a Europa/África?',opts:['Pacífico','Índico','Atlântico','Ártico'],ans:2,hint:'Travessias dos navegadores europeus'},
+],
+medium:[
+  {q:'Qual é o país com mais ilhas do mundo?',opts:['Indonésia','Filipinas','Japão','Suécia'],ans:3,hint:'País nórdico europeu'},
+  {q:'A cordilheira dos Andes percorre quantos países?',opts:['5','6','7','9'],ans:3,hint:'Da Venezuela à Argentina'},
+  {q:'Qual é o estreito que separa a Europa de África?',opts:['Estreito de Dover','Estreito de Ormuz','Estreito de Gibraltar','Estreito de Bering'],ans:2,hint:'Entre Espanha e Marrocos'},
+  {q:'Qual é a capital da Austrália?',opts:['Sydney','Melbourne','Camberra','Brisbane'],ans:2,hint:'Construída especialmente para ser capital'},
+  {q:'Que fenómeno climático é causado pelo aquecimento das águas do Pacífico?',opts:['La Niña','El Niño','Monção','Ciclone'],ans:1,hint:'Nome espanhol que significa o menino'},
+  {q:'Qual é o país com a maior linha costeira do mundo?',opts:['Rússia','Austrália','Canadá','Noruega'],ans:2,hint:'País do xarope de ácer'},
+  {q:'O rio Nilo desagua em que mar?',opts:['Mar Vermelho','Mar Mediterrâneo','Mar Cáspio','Oceano Índico'],ans:1,hint:'Mar entre Europa e África do Norte'},
+  {q:'Qual é a capital da Nova Zelândia?',opts:['Auckland','Wellington','Christchurch','Hamilton'],ans:1,hint:'Cidade no sul da ilha norte'},
+  {q:'Qual é o pico mais alto de África?',opts:['Monte Quénia','Monte Atlas','Kilimanjaro','Ras Dashen'],ans:2,hint:'Na Tanzânia'},
+  {q:'Qual é o país mais densamente populoso do mundo?',opts:['Bangladesh','Singapura','Mónaco','Taiwan'],ans:2,hint:'Cidade-estado europeia com casino famoso'},
+  {q:'Que tipo de clima predomina no interior de Moçambique?',opts:['Tropical húmido','Desértico','Tropical de savana','Temperado'],ans:2,hint:'Chuvas sazonais e vegetação de savana'},
+  {q:'Qual é a foz do rio Zambeze?',opts:['Oceano Atlântico','Golfo da Guiné','Oceano Índico','Mar Vermelho'],ans:2,hint:'Litoral de Moçambique'},
+  {q:'Que país tem a maior floresta tropical?',opts:['Congo','Indonésia','Brasil','Colômbia'],ans:2,hint:'Maior país da América do Sul'},
+  {q:'Qual é o planalto mais extenso de África?',opts:['Planalto Etíope','Planalto do Leste Africano','Planalto do Congo','Planalto Sul-Africano'],ans:3,hint:'Inclui partes de Moçambique, Zimbábue e África do Sul'},
+  {q:'Qual é a principal causa do desmatamento na Amazónia?',opts:['Urbanização','Pecuária e agricultura','Mineração','Turismo'],ans:1,hint:'Limpeza de terra para criar pastagens'},
+  {q:'Qual é a capital do Canadá?',opts:['Toronto','Montreal','Vancouver','Ottawa'],ans:3,hint:'Não é a cidade mais conhecida'},
+  {q:'O Canal de Suez liga que dois mares?',opts:['Mediterrâneo e Vermelho','Mediterrâneo e Negro','Vermelho e Árabe','Índico e Pacífico'],ans:0,hint:'Encurta a rota Europa-Ásia'},
+  {q:'Qual é o país com maior área da América do Sul?',opts:['Argentina','Peru','Colômbia','Brasil'],ans:3,hint:'Maior país do hemisfério sul'},
+  {q:'Onde fica o deserto do Namibe?',opts:['África do Sul','Namíbia e Angola','Botsuana','Zimbabwe'],ans:1,hint:'Um dos desertos mais antigos do mundo'},
+  {q:'Qual é o ponto mais baixo da Terra?',opts:['Vale da Morte','Mar Morto','Lago Assal','Depressão de Afar'],ans:1,hint:'Fica entre Israel e Jordânia'},
+  {q:'Qual é a maior bacia hidrográfica de Moçambique?',opts:['Rio Save','Rio Limpopo','Rio Zambeze','Rio Incomáti'],ans:2,hint:'Atravessa todo o centro do país'},
+  {q:'Qual é o ponto mais alto de Moçambique?',opts:['Monte Binga','Monte Namuli','Monte Gorongosa','Serra Chôa'],ans:0,hint:'Fica na província de Manica'},
+  {q:'Que tipo de clima predomina no sul de Moçambique?',opts:['Equatorial','Tropical seco','Mediterrânico','Polar'],ans:1,hint:'Estação seca mais longa que no norte'},
+  {q:'Qual é o maior arquipélago do mundo?',opts:['Filipinas','Indonésia','Japão','Maldivas'],ans:1,hint:'Mais de 17 mil ilhas no Sudeste Asiático'},
+  {q:'Qual é a capital da Tailândia?',opts:['Banguecoque','Hanói','Jacarta','Manila'],ans:0,hint:'Cidade conhecida pelos templos budistas'},
+],
+hard:[
+  {q:'O que é a teoria da deriva continental proposta por Wegener?',opts:['Movimento das placas oceânicas','Os continentes foram um único bloco e separaram-se','As correntes marítimas moldam os continentes','A rotação da Terra muda as fronteiras'],ans:1,hint:'Pangeia é o nome do supercontinente original'},
+  {q:'Qual é o fenómeno geográfico responsável pela formação das ilhas do Havai?',opts:['Subducção de placas','Ponto quente mantélico','Rifte oceânico','Colisão de placas continentais'],ans:1,hint:'Magma sobe do manto em ponto fixo'},
+  {q:'O que é a isóbara em meteorologia?',opts:['Linha que une pontos de igual temperatura','Linha que une pontos de igual pressão atmosférica','Linha que une pontos de igual altitude','Linha que une pontos de igual precipitação'],ans:1,hint:'Usada em mapas de previsão do tempo'},
+  {q:'Qual é a principal diferença entre um glaciar e uma calota glaciar?',opts:['Temperatura','Composição química','Dimensão e localização — calota cobre regiões polares inteiras','Velocidade de movimento'],ans:2,hint:'Groenlândia e Antárctida têm calotas'},
+  {q:'O que estuda a geomorfologia?',opts:['A composição química dos solos','As formas do relevo terrestre e os processos que as originam','O movimento das placas tectónicas','A distribuição das populações'],ans:1,hint:'Morfologia = forma; geo = terra'},
+  {q:'Qual é o processo pelo qual a água passa de líquido a vapor sem atingir 100°C?',opts:['Condensação','Precipitação','Evaporação','Sublimação'],ans:2,hint:'Acontece à superfície da água permanentemente'},
+  {q:'O que é o efeito de Coriolis?',opts:['Aquecimento diferencial das massas de ar','Desvio dos ventos e correntes pela rotação da Terra','Circulação de correntes oceânicas profundas','Reflexo da radiação solar na atmosfera'],ans:1,hint:'Desvio para a direita no norte, esquerda no sul'},
+  {q:'Qual é a diferença entre clima e tempo meteorológico?',opts:['São sinónimos','Tempo é a condição momentânea; clima é o padrão de longo prazo','Clima é local; tempo é global','Tempo mede temperatura; clima mede vento'],ans:1,hint:'Tempo = hoje; clima = 30 anos de médias'},
+  {q:'O que é a ITCZ (Zona de Convergência Intertropical)?',opts:['Corrente marítima equatorial','Cinturão de baixas pressões e chuvas na zona equatorial','Linha imaginária de separação dos ventos alísios','Sistema de altas pressões subtropicais'],ans:1,hint:'Responsável pelas chuvas tropicais'},
+  {q:'Em hidrologia, o que é o caudal de um rio?',opts:['Comprimento total do rio','Volume de água que passa por uma secção por unidade de tempo','Profundidade máxima do leito','Velocidade máxima da corrente'],ans:1,hint:'Medido em metros cúbicos por segundo'},
+  {q:'O que é a subsidência atmosférica?',opts:['Subida de ar quente e húmido','Descida de ar frio e seco que inibe a precipitação','Convergência de frentes frias e quentes','Circulação de ar em altitude'],ans:1,hint:'Explica a aridez dos desertos subtropicais'},
+  {q:'O que é o índice de aridez de Martonne?',opts:['Relação entre evapotranspiração e precipitação','Precipitação anual dividida pela temperatura média mais 10','Temperatura mínima dividida pela precipitação','Radiação solar por km²'],ans:1,hint:'Fórmula: P/(T+10)'},
+  {q:'Qual é o impacto geográfico da tectónica de placas em Moçambique?',opts:['Formação de glaciares','O Grande Vale do Rifte estende-se a Moçambique formando o Lago Niassa','Vulcanismo activo no litoral','Soerguimento da Cordilheira de Chimanimani'],ans:1,hint:'Rifte Africano Oriental'},
+  {q:'O que é a teoria do determinismo geográfico?',opts:['O homem domina e transforma o ambiente','O ambiente físico determina o comportamento e organização das sociedades','A cultura é independente da geografia','A urbanização elimina a influência do ambiente'],ans:1,hint:'Contraposto pelo possibilismo geográfico'},
+  {q:'O que é a geodesia?',opts:['Estudo dos solos agrícolas','Ciência que estuda a forma, dimensão e campo gravitacional da Terra','Cartografia de zonas costeiras','Medição de altitude por satélite'],ans:1,hint:'Base para o GPS e cartografia rigorosa'},
+  {q:'O que é a transumância?',opts:['Migração definitiva de populações rurais para cidades','Deslocamento sazonal de rebanhos entre pastagens de altitude diferente','Técnica de cultivo em terraços','Sistema de rotação de culturas'],ans:1,hint:'Pastores que sobem no verão e descem no inverno'},
+  {q:'Qual é a principal função dos mananciais na hidrologia?',opts:['Armazenar água para irrigação','Recarregar aquíferos subterrâneos e alimentar nascentes e rios','Controlar as cheias urbanas','Filtrar contaminantes industriais'],ans:1,hint:'Zonas de recarga hídrica essenciais'},
+  {q:'O que caracteriza o bioma de cerrado brasileiro?',opts:['Floresta densa e permanentemente húmida','Savana tropical com vegetação arbustiva e árvores esparsas','Deserto com vegetação xerófita','Pradaria temperada sem árvores'],ans:1,hint:'Semelhante ao miombo africano'},
+  {q:'O que é a pegada hídrica?',opts:['Volume de água usada na produção de um bem ou serviço','Área de bacia hidrográfica por habitante','Taxa de evaporação de um lago','Quantidade de água doce disponível por país'],ans:0,hint:'Conceito de sustentabilidade da água'},
+  {q:'O que é o albedo na climatologia?',opts:['Temperatura máxima anual de uma região','Capacidade de uma superfície de reflectir a radiação solar','Quantidade de CO2 absorvida pela vegetação','Velocidade do vento em altitude'],ans:1,hint:'Neve tem albedo alto; oceano tem albedo baixo'},
+  {q:'O que é o efeito de Coriolis?',opts:['Desvio do movimento de fluidos causado pela rotação da Terra','Aumento da pressão atmosférica com a altitude','Variação da gravidade entre o equador e os polos','Movimento das marés oceânicas'],ans:0,hint:'Explica a rotação dos ciclones'},
+  {q:'O que caracteriza uma zona de subducção?',opts:['Duas placas afastam-se uma da outra','Uma placa desliza sob outra, geralmente gerando vulcões e sismos','Duas placas deslizam lateralmente sem colisão','Placas que permanecem estáticas'],ans:1,hint:'Comum em zonas como o Japão e os Andes'},
+  {q:'O que é a desertificação?',opts:['Formação natural de oásis','Degradação de terras secas por acção humana e clima, perdendo capacidade produtiva','Processo de irrigação artificial','Expansão natural das florestas tropicais'],ans:1,hint:'Acelerada pelo sobrepastoreio e desmatamento'},
+  {q:'O que é a Zona de Convergência Intertropical (ZCIT)?',opts:['Faixa onde os ventos alísios dos dois hemisférios se encontram, gerando intensa precipitação','Linha imaginária que divide o globo em hemisférios','Zona de elevada pressão atmosférica permanente','Área polar de baixa precipitação'],ans:0,hint:'Determina as chuvas equatoriais ao longo do ano'},
+  {q:'O que é o efeito de estufa e qual o seu papel no clima terrestre?',opts:['Fenómeno exclusivamente artificial sem causas naturais','Retenção de calor na atmosfera por gases como CO2 e metano, naturalmente necessária à vida mas intensificada pela actividade humana','Resfriamento global causado pela poluição','Processo que ocorre apenas nos polos'],ans:1,hint:'Sem ele a Terra seria gelada; em excesso, causa aquecimento global'},
+]
+},
+hist:{
+easy:[
+  {q:'Em que ano Moçambique se tornou independente?',opts:['1960','1975','1980','1964'],ans:1,hint:'Dia 25 de Junho'},
+  {q:'Quem foi o primeiro presidente de Moçambique?',opts:['Joaquim Chissano','Armando Guebuza','Samora Machel','Filipe Nyusi'],ans:2,hint:'Faleceu em acidente de avião em 1986'},
+  {q:'Em que ano começou a Primeira Guerra Mundial?',opts:['1916','1914','1918','1920'],ans:1,hint:'Assassinato do Arquiduque Francisco Fernando'},
+  {q:'Em que ano terminou a Segunda Guerra Mundial?',opts:['1943','1944','1945','1946'],ans:2,hint:'Com a rendição do Japão'},
+  {q:'Quem descobriu o caminho marítimo para a Índia?',opts:['Bartolomeu Dias','Cristóvão Colombo','Vasco da Gama','Fernão de Magalhães'],ans:2,hint:'Português que dobrou o Cabo da Boa Esperança'},
+  {q:'Em que ano chegou o Homem à Lua?',opts:['1965','1969','1972','1971'],ans:1,hint:'Neil Armstrong foi o primeiro'},
+  {q:'Quem foi Nelson Mandela?',opts:['Presidente do Quénia','Presidente da África do Sul','Líder de Angola','Rei do Zimbabué'],ans:1,hint:'Preso por 27 anos antes de governar'},
+  {q:'Em que ano caiu o Muro de Berlim?',opts:['1987','1988','1989','1990'],ans:2,hint:'Fim da Guerra Fria'},
+  {q:'Quem fundou a FRELIMO?',opts:['Samora Machel','Eduardo Mondlane','Joaquim Chissano','Marcelino dos Santos'],ans:1,hint:'Assassinado em 1969'},
+  {q:'Quando foi assinado o Acordo Geral de Paz em Moçambique?',opts:['1990','1992','1994','1996'],ans:1,hint:'Em Roma, Itália'},
+  {q:'Quem foi Cristóvão Colombo?',opts:['Navegador que chegou à América em 1492','Rei de Espanha','Navegador Português','General Romano'],ans:0,hint:'Genovês ao serviço de Espanha'},
+  {q:'A Revolução Francesa aconteceu em que ano?',opts:['1776','1789','1799','1815'],ans:1,hint:'Queda da Bastilha'},
+  {q:'Quem foi Mahatma Gandhi?',opts:['Presidente da Índia','Líder da independência da Índia pela não-violência','General Britânico','Rei do Nepal'],ans:1,hint:'Satyagraha — resistência pacífica'},
+  {q:'Em que cidade ocorreu a Revolução Francesa?',opts:['Londres','Berlim','Madrid','Paris'],ans:3,hint:'Capital da França'},
+  {q:'Qual foi o primeiro país a dar o voto às mulheres?',opts:['EUA','França','Nova Zelândia','Inglaterra'],ans:2,hint:'País da Oceânia em 1893'},
+  {q:'Quem foi Napoleão Bonaparte?',opts:['Rei de Inglaterra','Imperador de França','General da Rússia','Presidente da Espanha'],ans:1,hint:'Exilado em Santa Helena'},
+  {q:'Em que continente nasceu a humanidade segundo a ciência?',opts:['Ásia','Europa','América','África'],ans:3,hint:'Fósseis mais antigos encontrados na Etiópia e Tanzânia'},
+  {q:'Que civilização construiu as pirâmides de Gizé?',opts:['Romana','Grega','Egípcia','Mesopotâmica'],ans:2,hint:'Faraós do Antigo Egipto'},
+  {q:'Quem foi Martin Luther King?',opts:['Presidente dos EUA','Líder dos direitos civis dos negros nos EUA','General da Guerra Civil','Ministro protestante da Alemanha'],ans:1,hint:'Discurso "I Have a Dream"'},
+  {q:'Em que ano se deu a independência dos EUA?',opts:['1776','1783','1791','1800'],ans:0,hint:'4 de Julho'},
+  {q:'Quem foi Eduardo Mondlane?',opts:['Primeiro presidente de Angola','Fundador e primeiro presidente da FRELIMO','Líder da revolução cubana','Rei do antigo Império de Gaza'],ans:1,hint:'Assassinado em 1969 antes da independência'},
+  {q:'Em que ano terminou a 2ª Guerra Mundial?',opts:['1943','1944','1945','1946'],ans:2,hint:'Rendição do Japão após as bombas atómicas'},
+  {q:'Quem foi Nelson Mandela?',opts:['Primeiro presidente negro da África do Sul','Rei do Zimbabwe','Fundador da ONU','Líder colonial britânico'],ans:0,hint:'Esteve preso 27 anos por lutar contra o apartheid'},
+  {q:'O que foi a Revolução Francesa?',opts:['Guerra entre França e Inglaterra','Movimento que derrubou a monarquia absolutista francesa em 1789','Independência das colónias francesas','Unificação da França'],ans:1,hint:'Liberdade, Igualdade, Fraternidade'},
+  {q:'Quem foi Cristóvão Colombo?',opts:['Navegador que chegou à América em 1492','Rei de Portugal no séc. XV','Explorador do interior de África','Conquistador do México'],ans:0,hint:'Viagem financiada pela Coroa de Espanha'},
+],
+medium:[
+  {q:'O que foi a Conferência de Berlim de 1884-85?',opts:['Tratado de paz da 1ª GM','Divisão de África entre potências europeias','Criação da ONU','Acordo comercial europeu'],ans:1,hint:'Também chamada Partilha de África'},
+  {q:'O que foi o apartheid?',opts:['Sistema de segregação racial na África do Sul','Movimento independentista angolano','Sistema político da Rodésia','Política colonial britânica no Quénia'],ans:0,hint:'Durou de 1948 a 1994'},
+  {q:'O que foi a Guerra Fria?',opts:['Conflito armado entre EUA e URSS','Tensão política e ideológica entre EUA e URSS sem conflito directo','Guerra no Ártico','Conflito entre NATO e China'],ans:1,hint:'1947–1991, capitalismo vs comunismo'},
+  {q:'O que foi o Plano Marshall?',opts:['Plano militar americano para a Coreia','Ajuda económica dos EUA à Europa após a 2ª GM','Acordo de desarmamento nuclear','Plano de colonização americana em África'],ans:1,hint:'Reconstrução da Europa Ocidental'},
+  {q:'Qual foi a causa imediata da Primeira Guerra Mundial?',opts:['Invasão da Polónia pela Alemanha','Assassinato do Arquiduque Francisco Fernando em Sarajevo','Crise de Marrocos','Conflito entre Áustria e Rússia'],ans:1,hint:'28 de Junho de 1914, Gavrilo Princip'},
+  {q:'O que foi a Revolução Industrial?',opts:['Movimento de independências africanas','Transição da produção manual para a mecanizada no século XVIII','Revolução política inglesa de 1688','Reforma agrária europeia'],ans:1,hint:'Começou em Inglaterra com a máquina a vapor'},
+  {q:'Qual foi o papel de Moçambique durante a Guerra da Rodésia?',opts:['Apoiou o regime de Ian Smith','Forneceu base e apoio à ZANLA/ZANU contra o regime branco','Manteve-se neutro','Mediou as negociações de paz'],ans:1,hint:'Frelimo apoiou os movimentos de libertação vizinhos'},
+  {q:'O que foi a Operação Gordian Knot?',opts:['Ofensiva militar portuguesa contra a FRELIMO em Moçambique','Invasão britânica de Moçambique','Operação da ONU no Congo','Campanha naval americana no Índico'],ans:0,hint:'1970, General Kaúlza de Arriaga'},
+  {q:'O que foi o tratado de Versalhes?',opts:['Acordo que criou a Liga das Nações após a 1ª GM','Tratado de paz franco-alemão de 1815','Acordo colonial entre Portugal e Alemanha','Carta fundadora da ONU'],ans:0,hint:'1919, impôs pesadas sanções à Alemanha'},
+  {q:'O que foi a Revolução Cubana?',opts:['Golpe militar de Batista','Movimento liderado por Fidel Castro que derrubou Batista em 1959','Intervenção americana em Cuba','Independência de Cuba de Espanha'],ans:1,hint:'Guerrilha da Serra Maestra'},
+  {q:'Qual foi o papel de Samora Machel após a independência?',opts:['Tornou-se Presidente e adoptou políticas marxistas-leninistas','Mediou a paz civil','Manteve relações com Portugal','Criou um sistema multipartidário'],ans:0,hint:'Moçambique era Estado de partido único — FRELIMO'},
+  {q:'O que foi a Crise dos Mísseis de Cuba?',opts:['Invasão americana de Cuba em 1962','Confronto entre EUA e URSS por mísseis soviéticos em Cuba','Golpe cubano apoiado pela URSS','Tentativa de assassinato de Kennedy'],ans:1,hint:'Outubro de 1962, beira da guerra nuclear'},
+  {q:'O que foi o colonialismo?',opts:['Sistema de comércio entre nações iguais','Domínio político e económico de países mais fortes sobre outros','Movimento de migração voluntária','Acordo de cooperação militar'],ans:1,hint:'Europeus dominaram África, Ásia e América'},
+  {q:'O que foi a Revolução de Outubro de 1917?',opts:['Revolução liberal russa','Tomada do poder pelos Bolcheviques liderados por Lenine','Revolução constitucional na Rússia','Golpe militar do Exército Czarista'],ans:1,hint:'Criou a União Soviética'},
+  {q:'Qual foi o impacto da independência de Moçambique nos países vizinhos?',opts:['Provocou a queda do apartheid imediatamente','Deu base de apoio aos movimentos de libertação da Rodésia e África do Sul','Criou instabilidade regional sem qualquer impacto positivo','Provocou conflito com a Tanzânia'],ans:1,hint:'Samora Machel apoiou ANC e ZAPU/ZANU'},
+  {q:'O que foi o Acordo de Lusaka de 1974?',opts:['Acordo de paz entre FRELIMO e Portugal que levou à independência','Tratado de fronteiras entre Moçambique e Zâmbia','Acordo de cooperação económica com a URSS','Cessação da guerra civil em Moçambique'],ans:0,hint:'Após o 25 de Abril em Portugal'},
+  {q:'O que foi o Império Romano?',opts:['República democrática da Antiguidade','Maior império da Antiguidade, centrado em Roma, que durou séculos','Confederação de cidades gregas','Sistema feudal medieval'],ans:1,hint:'Do século VIII a.C. ao século V d.C. (Ocidente)'},
+  {q:'Qual é o significado histórico da Batalha de Adua (1896)?',opts:['Vitória portuguesa em África','Primeira derrota de uma potência europeia por um exército africano — Etiópia sobre Itália','Derrota do Egipto pela Inglaterra','Vitória da FRELIMO contra Portugal'],ans:1,hint:'Menelik II derrotou os italianos'},
+  {q:'O que foi o Movimento dos Não-Alinhados?',opts:['Aliança militar anti-comunista','Bloco de países que não queriam alinhar-se com EUA nem URSS na Guerra Fria','Organização económica africana','Acordo de descolonização da ONU'],ans:1,hint:'Conferência de Bandung 1955, Tito, Nasser, Nehru'},
+  {q:'Qual foi o impacto da seca de 1983-84 em Moçambique?',opts:['Acelerou o desenvolvimento económico','Combinada com a guerra civil, provocou fome generalizada e deslocamentos','Aumentou a produção agrícola','Levou ao acordo de paz'],ans:1,hint:'Guerra+seca = crise humanitária gravíssima'},
+  {q:'O que foi o Acordo Geral de Paz de 1992 em Moçambique?',opts:['Tratado comercial com Portugal','Acordo que terminou a guerra civil entre a FRELIMO e a RENAMO','Acordo de independência','Tratado de fronteiras com a Tanzânia'],ans:1,hint:'Assinado em Roma após 16 anos de guerra'},
+  {q:'O que foi a Revolução Industrial?',opts:['Mudança tecnológica e económica iniciada na Inglaterra no séc. XVIII','Independência das colónias americanas','Movimento artístico do séc. XIX','Reforma agrária europeia'],ans:0,hint:'Máquina a vapor, fábricas, urbanização'},
+  {q:'O que caracterizou a Guerra do Vietname?',opts:['Conflito entre França e Alemanha','Guerra entre o Vietname do Norte comunista e o Sul apoiado pelos EUA','Guerra civil na Coreia','Conflito colonial britânico'],ans:1,hint:'Terminou em 1975 com a vitória do Norte'},
+  {q:'O que foi a Primavera de Praga (1968)?',opts:['Revolução agrícola checa','Movimento de liberalização política na Checoslováquia reprimido pela URSS','Independência da Checoslováquia','Reforma económica soviética'],ans:1,hint:'Tanques soviéticos invadiram Praga'},
+  {q:'O que foi a Queda do Muro de Berlim (1989)?',opts:['Início da Guerra Fria','Evento simbólico do fim da divisão entre Alemanha Oriental e Ocidental, marcando o fim da Guerra Fria','Construção do muro que dividiu Berlim','Unificação económica europeia'],ans:1,hint:'Levou à reunificação alemã em 1990'},
+],
+hard:[
+  {q:'Qual é a tese central do materialismo histórico de Marx?',opts:['A história é determinada por grandes líderes','As forças de produção económica determinam a organização social e política','As ideias e cultura determinam a história','A geografia determina o desenvolvimento das civilizações'],ans:1,hint:'Infra-estrutura económica determina a superestrutura política'},
+  {q:'O que foi o sistema de Westfália e qual o seu legado?',opts:['Sistema colonial europeu do século XVII','Sistema de relações internacionais baseado na soberania dos Estados nacionais, criado em 1648','Acordo económico europeu pré-capitalista','Sistema feudal alemão'],ans:1,hint:'Tratados de Paz de 1648 após a Guerra dos 30 Anos'},
+  {q:'O que distingue o imperialismo do colonialismo segundo Lenine?',opts:['São sinónimos','Imperialismo é a fase monopolista do capitalismo; colonialismo é a ocupação territorial directa','Colonialismo é mais antigo e limitado; imperialismo é global e financeiro','Imperialismo usa força militar; colonialismo usa comércio'],ans:1,hint:'Lenine: "O Imperialismo, Fase Superior do Capitalismo" (1916)'},
+  {q:'O que foi a Negritude enquanto movimento cultural e político?',opts:['Movimento de segregação racial africana','Movimento literário e filosófico afro-caribenho que valorizava a cultura e identidade negra','Partido político sul-africano anti-apartheid','Sistema educacional colonial'],ans:1,hint:'Aimé Césaire, Léopold Sédar Senghor'},
+  {q:'Qual foi o impacto do RENAMO na economia de Moçambique nos anos 1980?',opts:['Estimulou o desenvolvimento rural','Destruiu sistematicamente infraestruturas, causando perdas estimadas em 15 mil milhões USD','Criou zonas de desenvolvimento alternativo','Abriu o mercado para investimento externo'],ans:1,hint:'Guerra civil 1977-1992'},
+  {q:'O que foi a doutrina da TANU e como influenciou o socialismo africano?',opts:['Doutrina militar tanzaniana','Ujamaa — socialismo baseado nos valores comunitários africanos, proposto por Nyerere','Sistema educacional para-colonial','Política de não-alinhamento militar'],ans:1,hint:'Julius Nyerere, Tanzânia — "Declaração de Arusha" 1967'},
+  {q:'Qual é a diferença entre o pan-africanismo de Du Bois e o de Garvey?',opts:['Não há diferença significativa','Du Bois defendia integração intelectual e política; Garvey defendia retorno físico a África','Du Bois era separatista; Garvey era integracionista','Ambos eram marxistas mas com estratégias diferentes'],ans:1,hint:'Du Bois: conferências pan-africanas; Garvey: "Back to Africa"'},
+  {q:'O que foi o Programa de Ajustamento Estrutural (PAE) e o seu impacto em Moçambique?',opts:['Programa de reconstrução pós-guerra financiado pela URSS','Programa do FMI/Banco Mundial que exigiu liberalização económica em troca de empréstimos, com impacto social negativo','Plano nacional de desenvolvimento agrário','Sistema de colectivização das machambas estatais'],ans:1,hint:'Moçambique aderiu em 1987, abandono do marxismo-leninismo'},
+  {q:'O que foi a Conferência de Bandung e qual o seu significado histórico?',opts:['Conferência colonial europeia de 1885','Primeira grande conferência afro-asiática de 1955 que afirmou a autodeterminação dos povos','Cimeira da OUA sobre descolonização','Reunião dos movimentos de libertação africanos'],ans:1,hint:'29 países afro-asiáticos, base do Movimento dos Não-Alinhados'},
+  {q:'O que foi a política do Estado Novo de Salazar em relação às colónias africanas?',opts:['Política de descolonização progressiva','Recusa da descolonização, considerando as colónias "províncias ultramarinas" integradas em Portugal','Concessão gradual de autonomia','Política de associação e federalismo'],ans:1,hint:'Levou à guerra colonial em Angola, Guiné e Moçambique'},
+  {q:'Qual é a interpretação historiográfica da "scramble for Africa"?',opts:['Processo de migração voluntária europeia para África','Partilha imperialista de África pelas potências europeias entre 1880 e 1914 com base em interesses económicos e geopolíticos','Processo de resistência africana ao colonialismo','Sistema de comércio triangular atlântico'],ans:1,hint:'Resultado directo da Conferência de Berlim'},
+  {q:'O que foi o sistema de prazos em Moçambique colonial?',opts:['Sistema de trabalho forçado nas minas','Concessão de terras a colonos luso-africanos que governavam como senhorios feudais','Sistema de impostos coloniais portugueses','Contrato de trabalho migratório para a África do Sul'],ans:1,hint:'Séculos XVII-XIX, mistura de poderes africanos e portugueses'},
+  {q:'Qual foi o papel das missões religiosas no colonialismo em Moçambique?',opts:['Resistiram ao colonialismo e apoiaram os africanos','Serviram de agentes culturais e ideológicos do colonialismo, promovendo a "civilização" europeia mas também formando quadros africanos que lideraram movimentos de libertação','Foram totalmente neutras','Foram expulsas pelos portugueses'],ans:1,hint:'Eduardo Mondlane estudou em missões'},
+  {q:'O que é o conceito de "acumulação primitiva" de Marx e como se relaciona com a colonização?',opts:['Poupança inicial para iniciar um negócio','Processo violento de separação dos produtores dos seus meios de produção, que Marx identificou como base do capitalismo — replicado na colonização pela expropriação de terras africanas','Sistema de tributação medieval','Acumulação de ouro nas metrópoles europeias'],ans:1,hint:'Marx analisou a Inglaterra; Rosa Luxemburgo aplicou ao colonialismo'},
+  {q:'O que foi o "Wretched of the Earth" (Os Condenados da Terra) de Fanon?',opts:['Romance sobre a escravidão','Análise psicológica e política do colonialismo e da violência da descolonização','Manual de guerrilha africana','Estudo económico do subdesenvolvimento'],ans:1,hint:'Frantz Fanon, 1961, influenciou FRELIMO e outros movimentos'},
+  {q:'Qual é a crítica pós-colonial ao conceito de "missão civilizadora"?',opts:['Era uma política genuinamente humanitária','Era uma ideologia que legitimava a dominação colonial, negando a história e cultura dos povos colonizados','Era apenas retórica sem impacto real','Era uma política adoptada apenas por Portugal'],ans:1,hint:'Edward Said, Frantz Fanon, Chinua Achebe'},
+  {q:'O que defendeu Eric Hobsbawm sobre a "invenção das tradições"?',opts:['Todas as tradições são autênticas e antigas','Muitas tradições "antigas" foram criadas recentemente para legitimar poder ou identidade nacional','As tradições nunca mudam ao longo do tempo','A tradição é sempre superior à modernidade'],ans:1,hint:'Obra "The Invention of Tradition" (1983)'},
+  {q:'O que caracteriza o conceito de "subalterno" em Gayatri Spivak?',opts:['Classe trabalhadora urbana','Grupos silenciados e marginalizados pela história colonial e pelas estruturas de poder, cuja voz raramente é ouvida','Funcionário público de baixo escalão','Movimento político de esquerda'],ans:1,hint:'"Pode o subalterno falar?" (1988)'},
+  {q:'Qual foi o papel da Conferência de Bandung (1955) na história da descolonização?',opts:['Dividiu a Ásia entre potências coloniais','Reuniu países afro-asiáticos recém-independentes, lançando as bases do Movimento dos Não-Alinhados','Criou a União Africana','Estabeleceu o FMI'],ans:1,hint:'Sukarno, Nehru, Nasser, Zhou Enlai'},
+  {q:'O que é a "dependência" segundo a Teoria da Dependência (Cardoso, Prebisch)?',opts:['Relação de cooperação igualitária entre países','Estrutura económica em que países periféricos ficam subordinados aos países centrais, perpetuando o subdesenvolvimento','Política de ajuda externa sem condições','Sistema de comércio livre entre iguais'],ans:1,hint:'Centro-periferia, deterioração dos termos de troca'},
+  {q:'O que distingue o "neocolonialismo" do colonialismo clássico segundo Kwame Nkrumah?',opts:['São idênticos em todos os aspectos','Mantém o controlo económico e político de ex-colónias sem ocupação territorial directa, através de elites locais e dependência financeira','É uma forma mais branda e benigna de domínio','Aplica-se apenas à América Latina'],ans:1,hint:'"Neo-Colonialism: The Last Stage of Imperialism" (1965)'},
+  {q:'Qual foi a importância histórica da Carta do Atlântico (1941)?',opts:['Dividiu a Europa após a 2ª GM','Declaração conjunta EUA-Reino Unido que apoiava a autodeterminação dos povos, inspirando movimentos anticoloniais','Tratado de comércio transatlântico','Acordo militar da NATO'],ans:1,hint:'Base ideológica usada por movimentos de libertação africanos'},
+  {q:'O que caracteriza a "historiografia subalterna" indiana (Subaltern Studies)?',opts:['Reescreve a história a partir da perspectiva das elites coloniais','Procura recuperar a agência histórica de camponeses e grupos marginalizados, contra narrativas elitistas','Foca exclusivamente em história militar','Rejeita qualquer uso de fontes coloniais'],ans:1,hint:'Ranajit Guha e outros, anos 1980'},
+  {q:'Qual é a tese de Walter Rodney em "Como a Europa Subdesenvolveu a África"?',opts:['A África sempre foi pobre por razões geográficas','O colonialismo europeu extraiu recursos e mão-de-obra africanas, causando activamente o subdesenvolvimento do continente','A independência resolveu todos os problemas económicos africanos','O comércio triangular beneficiou igualmente todas as partes'],ans:1,hint:'Obra de 1972, referência central no pan-africanismo'},
+  {q:'O que distingue a "história oral" como fonte histórica em contextos africanos?',opts:['É sempre menos fiável que documentos escritos','Valoriza testemunhos, tradições e memórias transmitidas oralmente como fontes legítimas, essenciais onde a escrita colonial é escassa ou tendenciosa','Aplica-se apenas a sociedades sem qualquer escrita','É um método exclusivamente literário sem rigor histórico'],ans:1,hint:'Jan Vansina valorizou a tradição oral como fonte histórica em África'},
+]
+},
+sci:{
+easy:[
+  {q:'Qual é o símbolo químico da água?',opts:['CO2','O2','H2O','NaCl'],ans:2,hint:'Hidrogénio e Oxigénio'},
+  {q:'Quantos planetas tem o sistema solar?',opts:['7','8','9','10'],ans:1,hint:'Plutão foi reclassificado'},
+  {q:'O que produz a fotossíntese?',opts:['CO2 e água','Oxigénio e glucose','Nitrogénio e amónia','Metano e vapor'],ans:1,hint:'Plantas absorvem luz e CO2'},
+  {q:'Qual é o maior órgão do corpo humano?',opts:['Fígado','Pulmão','Coração','Pele'],ans:3,hint:'Cobre todo o exterior do corpo'},
+  {q:'Quantos ossos tem o adulto humano?',opts:['186','206','256','306'],ans:1,hint:'Duzentos e seis'},
+  {q:'O que estuda a biologia?',opts:['Estrelas e planetas','Os seres vivos','As rochas e minerais','A atmosfera terrestre'],ans:1,hint:'Bio = vida; logos = estudo'},
+  {q:'Qual é o gás que os seres humanos expiram?',opts:['Oxigénio','Nitrogénio','Dióxido de carbono','Hidrogénio'],ans:2,hint:'CO2 — produto da respiração celular'},
+  {q:'Que órgão bombeia o sangue no corpo humano?',opts:['Pulmão','Fígado','Rim','Coração'],ans:3,hint:'Músculo oco no centro do peito'},
+  {q:'O que é a célula?',opts:['Unidade básica dos minerais','Unidade básica dos seres vivos','Tipo de tecido muscular','Componente do sistema nervoso'],ans:1,hint:'Todos os organismos são feitos de células'},
+  {q:'Qual é o planeta mais próximo do Sol?',opts:['Vénus','Terra','Marte','Mercúrio'],ans:3,hint:'O mais pequeno dos planetas'},
+  {q:'O que é a gravidade?',opts:['Força de repulsão entre objectos','Força de atracção entre massas','Energia cinética dos corpos','Pressão atmosférica'],ans:1,hint:'Newton e a maçã'},
+  {q:'Qual é o metal mais abundante na crosta terrestre?',opts:['Ferro','Alumínio','Cobre','Zinco'],ans:1,hint:'Usado em latas e aviões'},
+  {q:'O que é o DNA?',opts:['Um tipo de proteína','Ácido desoxirribonucleico — informação genética','Um vírus','Uma bactéria'],ans:1,hint:'Presente no núcleo das células'},
+  {q:'Quantos cromossomas tem um ser humano normal?',opts:['23','44','46','48'],ans:2,hint:'23 pares = 46 no total'},
+  {q:'Qual é a unidade de medida da temperatura no sistema internacional?',opts:['Celsius','Fahrenheit','Kelvin','Rankine'],ans:2,hint:'Zero absoluto = 0 K = -273°C'},
+  {q:'O que é a evaporação?',opts:['Passagem de sólido a gás','Passagem de líquido a gás','Passagem de gás a líquido','Passagem de sólido a líquido'],ans:1,hint:'Água a secar ao sol'},
+  {q:'Que tipo de rocha é formada por arrefecimento do magma?',opts:['Sedimentar','Metamórfica','Ígnea ou magmática','Calcária'],ans:2,hint:'Granito e basalto são exemplos'},
+  {q:'O que é a cadeia alimentar?',opts:['Sequência de organismos onde cada um serve de alimento ao seguinte','Sistema de distribuição de alimentos','Ciclo da água na natureza','Processo de decomposição orgânica'],ans:0,hint:'Produtor → consumidor primário → consumidor secundário'},
+  {q:'Quem propôs a teoria da evolução das espécies?',opts:['Einstein','Newton','Darwin','Pasteur'],ans:2,hint:'Viagem no Beagle pelas Galápagos'},
+  {q:'Qual é a velocidade da luz no vácuo?',opts:['200.000 km/s','300.000 km/s','150.000 km/s','500.000 km/s'],ans:1,hint:'Aproximadamente 3×10⁸ m/s'},
+  {q:'Qual é o gás mais abundante na atmosfera terrestre?',opts:['Oxigénio','Dióxido de carbono','Nitrogénio','Hidrogénio'],ans:2,hint:'Cerca de 78% do ar que respiramos'},
+  {q:'Qual é o órgão responsável por bombear o sangue?',opts:['Pulmão','Fígado','Coração','Rim'],ans:2,hint:'Bate em média 70 vezes por minuto'},
+  {q:'Qual é a fórmula química da água?',opts:['CO2','H2O','O2','NaCl'],ans:1,hint:'Dois átomos de hidrogénio e um de oxigénio'},
+  {q:'Quem inventou a lâmpada eléctrica?',opts:['Nikola Tesla','Thomas Edison','Alexander Bell','Benjamin Franklin'],ans:1,hint:'Empresário e inventor americano do séc. XIX'},
+  {q:'Qual é o planeta mais próximo do Sol?',opts:['Vénus','Terra','Mercúrio','Marte'],ans:2,hint:'O mais pequeno do sistema solar'},
+],
+medium:[
+  {q:'O que é a mitose?',opts:['Divisão celular que forma células sexuais','Divisão celular que produz duas células filhas com o mesmo número de cromossomas','Fusão de dois gametas','Processo de síntese proteica'],ans:1,hint:'Para crescimento e regeneração — células somáticas'},
+  {q:'O que é a meiose?',opts:['Divisão celular de células musculares','Divisão celular que produz gametas com metade dos cromossomas','Divisão de células nervosas','Processo de replicação do DNA'],ans:1,hint:'Forma espermatozoides e óvulos — células haploides'},
+  {q:'O que é a lei de Ohm?',opts:['V=I/R','V=IR','I=VR','R=VI'],ans:1,hint:'Tensão = Intensidade × Resistência'},
+  {q:'O que é a osmose?',opts:['Transporte activo de iões através de membranas','Difusão de água através de membrana semipermeável de zona menos concentrada para mais concentrada','Dissolução de sais em água','Transporte de glucose nas células'],ans:1,hint:'Explicação do movimento de água nas células'},
+  {q:'O que é a fotossíntese ao nível bioquímico?',opts:['Produção de ATP por fermentação','Conversão de energia luminosa em energia química (glucose) usando CO2 e H2O','Oxidação de glucose para produzir energia','Síntese de proteínas a partir de aminoácidos'],ans:1,hint:'6CO2 + 6H2O + luz → C6H12O6 + 6O2'},
+  {q:'O que é um ecossistema?',opts:['Conjunto de animais numa região','Sistema formado por seres vivos e ambiente físico em interacção','Classificação de biomas tropicais','Estudo das populações humanas'],ans:1,hint:'Biótico + abiótico em equilíbrio dinâmico'},
+  {q:'O que é a entropia na termodinâmica?',opts:['Energia total de um sistema','Medida da desordem ou aleatoriedade de um sistema','Temperatura de equilíbrio','Pressão interna de um gás'],ans:1,hint:'2ª lei: entropia do universo tende a aumentar'},
+  {q:'O que é a tensão superficial?',opts:['Pressão dentro de um líquido','Força coesiva entre moléculas na superfície de um líquido','Viscosidade de fluidos','Força de atracção entre líquido e sólido'],ans:1,hint:'Permite que insectos caminhem sobre a água'},
+  {q:'O que é a selecção natural de Darwin?',opts:['Criação divina das espécies mais adaptadas','Processo pelo qual organismos mais adaptados ao ambiente sobrevivem e reproduzem-se mais','Mutação aleatória dos genes','Adaptação consciente dos organismos'],ans:1,hint:'Sobrevivência do mais apto ao ambiente'},
+  {q:'O que são as ondas electromagnéticas?',opts:['Ondas que precisam de meio material para se propagar','Ondas que se propagam no vácuo como campo eléctrico e magnético oscilantes','Ondas sonoras de alta frequência','Vibrações mecânicas de partículas'],ans:1,hint:'Luz, rádio, raios X, micro-ondas'},
+  {q:'O que é a reacção de neutralização em química?',opts:['Reacção entre dois ácidos','Reacção entre ácido e base que produz sal e água','Reacção de oxidação de metais','Decomposição de compostos orgânicos'],ans:1,hint:'HCl + NaOH → NaCl + H2O'},
+  {q:'O que é o ciclo do azoto/nitrogénio?',opts:['Ciclo de chuvas e evaporação','Processo de fixação, nitrificação e desnitrificação do azoto entre atmosfera, solo e seres vivos','Metabolismo do azoto nas células animais','Produção industrial de amoníaco'],ans:1,hint:'Bactérias do solo fixam N2 atmosférico'},
+  {q:'O que é a lei da conservação da energia?',opts:['Energia pode ser criada mas não destruída','Energia não pode ser criada nem destruída — apenas transformada','A energia cinética é sempre maior que a potencial','A temperatura é constante em sistemas fechados'],ans:1,hint:'1ª lei da termodinâmica'},
+  {q:'O que é a genética mendeliana?',opts:['Estudo da estrutura do DNA','Estudo da hereditariedade com base nas leis de Mendel','Análise de mutações genéticas','Clonagem de organismos'],ans:1,hint:'Ervilhas de Mendel — dominância e recessividade'},
+  {q:'O que é a pressão atmosférica?',opts:['Peso do ar por unidade de área','Temperatura máxima da atmosfera','Velocidade dos ventos na troposfera','Humidade relativa do ar'],ans:0,hint:'Ao nível do mar ≈ 1013 hPa = 1 atm'},
+  {q:'O que é a radioactividade?',opts:['Emissão de luz por materiais fosforescentes','Emissão espontânea de radiação por núcleos atómicos instáveis','Condução eléctrica em metais','Reflexo de ondas electromagnéticas'],ans:1,hint:'Becquerel, Marie Curie — desintegração nuclear'},
+  {q:'O que é a simbiose?',opts:['Competição entre espécies pelo mesmo nicho','Relação de benefício mútuo entre duas espécies diferentes','Parasitismo de organismos unicelulares','Predação entre mamíferos'],ans:1,hint:'Ex: algas e fungos nos líquenes; acácias e formigas'},
+  {q:'O que é a reacção de combustão?',opts:['Decomposição de compostos orgânicos','Reacção de um combustível com oxigénio que liberta calor e luz','Dissolução de metais em ácidos','Fermentação de açúcares'],ans:1,hint:'C + O2 → CO2 + energia'},
+  {q:'O que é a homeostase?',opts:['Crescimento constante de um organismo','Capacidade de um organismo manter o equilíbrio interno','Adaptação evolutiva a novos ambientes','Regulação da reprodução'],ans:1,hint:'Temperatura corporal, pH, glicose no sangue'},
+  {q:'O que é um isótopo?',opts:['Átomo de elemento diferente com a mesma massa','Átomo do mesmo elemento com diferente número de neutrões','Ião com carga eléctrica positiva','Composto molecular com dois elementos'],ans:1,hint:'C-12 e C-14 são isótopos do carbono'},
+  {q:'O que é a fotossíntese?',opts:['Processo de respiração das plantas','Processo pelo qual plantas convertem luz solar, água e CO2 em glicose e oxigénio','Processo de decomposição de matéria orgânica','Transporte de água nas raízes'],ans:1,hint:'Ocorre nos cloroplastos, usando clorofila'},
+  {q:'O que é a tabela periódica?',opts:['Lista de animais classificados por habitat','Organização dos elementos químicos por número atómico e propriedades','Calendário de descobertas científicas','Mapa de minerais na crosta terrestre'],ans:1,hint:'Criada por Dmitri Mendeleev em 1869'},
+  {q:'O que é o DNA?',opts:['Proteína estrutural das células','Molécula que contém a informação genética dos seres vivos','Tipo de açúcar simples','Membrana que envolve o núcleo celular'],ans:1,hint:'Estrutura em dupla hélice, descoberta por Watson e Crick'},
+  {q:'O que são os anticorpos?',opts:['Células que atacam o próprio corpo','Proteínas produzidas pelo sistema imunitário para combater agentes estranhos','Hormonas reguladoras do crescimento','Enzimas digestivas'],ans:1,hint:'Produzidos pelos linfócitos B'},
+  {q:'O que é a osmose?',opts:['Movimento de solutos através de uma membrana','Movimento de água através de uma membrana semipermeável, de uma região menos concentrada para outra mais concentrada em soluto','Processo de divisão celular','Transporte activo de iões'],ans:1,hint:'Importante na absorção de água pelas raízes das plantas'},
+],
+hard:[
+  {q:'O que é o princípio da incerteza de Heisenberg?',opts:['A posição e velocidade de uma partícula nunca podem ser medidas com precisão simultânea','A energia de um sistema é sempre conservada','Partículas subatómicas têm massa e carga opostas','A velocidade da luz é constante em qualquer referencial'],ans:0,hint:'ΔxΔp ≥ ℏ/2 — base da mecânica quântica'},
+  {q:'O que é a teoria da relatividade especial de Einstein?',opts:['A massa é constante independentemente da velocidade','O espaço e o tempo são relativos ao observador; E=mc²','A gravidade é uma força à distância','A luz é uma onda mecânica'],ans:1,hint:'1905: referencial inercial, invariância da velocidade da luz'},
+  {q:'O que é a epigenética?',opts:['Estudo dos genes recessivos','Modificações hereditárias da expressão génica sem alteração da sequência de DNA','Análise de mutações pontuais','Estudo da evolução dos cromossomas'],ans:1,hint:'Metilação do DNA e modificação de histonas'},
+  {q:'O que é a termodinâmica do não-equilíbrio?',opts:['Estudo de sistemas em equilíbrio termodinâmico perfeito','Ramo que estuda sistemas que trocam energia com o exterior e se mantêm longe do equilíbrio — como os seres vivos','Análise de reacções reversíveis','Estudo de gases perfeitos'],ans:1,hint:'Prigogine, estruturas dissipativas'},
+  {q:'O que é o potencial de acção em neurociência?',opts:['Força muscular máxima de um neurónio','Sinal eléctrico gerado pela despolarização rápida da membrana do neurónio','Gradiente de concentração iónica em repouso','Síntese de neurotransmissores'],ans:1,hint:'-70mV em repouso, +40mV no pico — Na+ entra, K+ sai'},
+  {q:'O que é a equação de Nernst?',opts:['Equação para calcular energia de reacção química','Equação que calcula o potencial de equilíbrio para um ião específico através de uma membrana','Relação entre pressão e volume de gases','Equação de velocidade de reacção enzimática'],ans:1,hint:'E = (RT/zF)ln([exterior]/[interior])'},
+  {q:'O que é a CRISPR-Cas9 e qual a sua importância?',opts:['Vírus que infecta bactérias','Sistema de edição génica de precisão que permite cortar e modificar sequências específicas de DNA','Técnica de clonagem por transferência nuclear','Método de sequenciação genómica de nova geração'],ans:1,hint:'Jennifer Doudna e Emmanuelle Charpentier — Nobel 2020'},
+  {q:'O que é o teorema de Bayes e a sua aplicação científica?',opts:['Teorema de geometria euclidiana','Regra probabilística que actualiza a probabilidade de uma hipótese com base em nova evidência','Método de integração matemática','Teoria de conjuntos da álgebra booleana'],ans:1,hint:'P(H|E) = P(E|H)P(H)/P(E) — base da inferência bayesiana'},
+  {q:'O que é a radiação de Hawking?',opts:['Radiação solar capturada por buracos negros','Radiação térmica que buracos negros deveriam emitir segundo a mecânica quântica, causando evaporação lenta','Emissão de raios X por estrelas de neutrões','Radiação cósmica de fundo de micro-ondas'],ans:1,hint:'Fronteira entre relatividade geral e mecânica quântica'},
+  {q:'O que é a lei de Hardy-Weinberg?',opts:['Lei do crescimento populacional exponencial','Princípio de equilíbrio genético de populações sem selecção, mutação, deriva ou migração','Relação entre frequência génica e adaptação','Modelo de especiação por isolamento geográfico'],ans:1,hint:'p² + 2pq + q² = 1 — base da genética de populações'},
+  {q:'O que é a catálise enzimática e o que é o modelo chave-fechadura?',opts:['Enzimas aumentam a temperatura de reacção','Enzimas reduzem a energia de activação; a especificidade resulta do encaixe preciso substrato-sítio activo','Enzimas criam novos produtos impossíveis sem elas','Enzimas são destruídas durante a reacção'],ans:1,hint:'Emil Fischer 1894 — substrato encaixa no sítio activo'},
+  {q:'O que é o modelo padrão da física de partículas?',opts:['Modelo cosmológico do Big Bang','Teoria que descreve as partículas fundamentais e as forças (excepto gravidade) — quarks, léptons, bosões','Modelo atómico de Bohr com orbitas definidas','Teoria das cordas unificada'],ans:1,hint:'Inclui bosão de Higgs descoberto em 2012'},
+  {q:'O que é a autopoiese na biologia teórica?',opts:['Processo de reprodução assexuada','Capacidade de sistemas vivos de se produzirem e manterem a si próprios através dos seus próprios processos','Evolução dirigida por selecção artificial','Regulação hormonal dos processos metabólicos'],ans:1,hint:'Maturana e Varela — o ser vivo como sistema fechado de produção'},
+  {q:'O que é a hipótese de Gaia de Lovelock?',opts:['A Terra foi criada por processos cosmológicos aleatórios','A biosfera regula activamente as condições da Terra para manter condições adequadas à vida','A vida na Terra foi originada por cometas','O clima é determinado exclusivamente pela actividade solar'],ans:1,hint:'James Lovelock — a Terra como sistema auto-regulador'},
+  {q:'O que é a mecânica quântica e em que difere da física clássica?',opts:['Estudo de corpos macroscópicos em movimento — igual à física clássica','Teoria que descreve o comportamento de partículas subatómicas onde a energia é quantizada e o determinismo clássico falha','Teoria do movimento de fluidos','Estudo das forças gravitacionais em escalas atómicas'],ans:1,hint:'Planck, Einstein, Bohr, Heisenberg — descontinuidade e probabilidade'},
+  {q:'O que é a entropia segundo a 2ª lei da termodinâmica?',opts:['Medida da energia total de um sistema','Medida da desordem de um sistema, que tende sempre a aumentar num sistema isolado','Quantidade de calor transferida entre corpos','Energia potencial armazenada num sistema'],ans:1,hint:'Explica por que processos espontâneos são irreversíveis'},
+  {q:'O que é o efeito de tunelamento quântico?',opts:['Movimento de partículas através de túneis subterrâneos','Capacidade de uma partícula atravessar uma barreira de energia que classicamente seria impossível superar','Aceleração de partículas em campos magnéticos','Colapso gravitacional de estrelas'],ans:1,hint:'Base do funcionamento de microscópios de tunelamento'},
+  {q:'O que é a epigenética?',opts:['Estudo de mutações no DNA','Estudo de alterações na expressão génica sem mudança na sequência do DNA, influenciadas pelo ambiente','Clonagem de organismos','Sequenciamento completo do genoma'],ans:1,hint:'Metilação do DNA, acetilação de histonas'},
+  {q:'O que é a teoria das cordas em física teórica?',opts:['Teoria sobre instrumentos musicais','Hipótese de que partículas fundamentais são vibrações de cordas unidimensionais, tentando unificar a gravidade com a mecânica quântica','Teoria sobre a expansão do universo','Modelo de redes neuronais'],ans:1,hint:'Propõe dimensões extra além das 4 conhecidas'},
+  {q:'O que é CRISPR-Cas9 na biotecnologia?',opts:['Técnica de clonagem de animais','Ferramenta de edição genética que permite cortar e modificar sequências específicas de DNA com precisão','Método de sequenciamento de proteínas','Vacina baseada em RNA mensageiro'],ans:1,hint:'Premiada com o Nobel da Química em 2020'},
+  {q:'O que é o paradoxo de Fermi?',opts:['Contradição na teoria da relatividade','Questão sobre a aparente ausência de contacto com civilizações extraterrestres, dada a probabilidade estatística da sua existência','Paradoxo sobre buracos negros','Problema sobre a velocidade da luz'],ans:1,hint:'"Onde estão todos?" — Enrico Fermi'},
+  {q:'O que é a matéria escura em cosmologia?',opts:['Matéria visível em telescópios comuns','Forma de matéria que não emite luz mas cuja gravidade afecta o movimento de galáxias, ainda não directamente detectada','Antimatéria produzida em aceleradores','Poeira interestelar comum'],ans:1,hint:'Estimada em cerca de 27% do universo'},
+  {q:'O que é a apoptose celular?',opts:['Divisão celular descontrolada típica do cancro','Morte celular programada, processo natural e regulado essencial ao desenvolvimento e homeostase','Fusão de duas células diferentes','Processo de formação de novos tecidos'],ans:1,hint:'Mecanismo que elimina células danificadas ou desnecessárias'},
+  {q:'O que é a relatividade geral de Einstein?',opts:['Teoria sobre a velocidade constante da luz apenas','Teoria que descreve a gravidade como a curvatura do espaço-tempo causada pela massa e energia','Teoria sobre partículas subatómicas','Lei da conservação de energia'],ans:1,hint:'1915 — previu a curvatura da luz e os buracos negros'},
+  {q:'O que é o emaranhamento quântico?',opts:['Mistura de partículas em altas temperaturas','Fenómeno em que duas partículas ficam correlacionadas de tal forma que o estado de uma afecta instantaneamente o estado da outra, independentemente da distância','Colisão de partículas em aceleradores','Decaimento radioactivo de núcleos atómicos'],ans:1,hint:'Einstein chamou-lhe "acção fantasmagórica à distância"'},
+]
+},
+moz:{
+easy:[
+  {q:'Qual é a capital de Moçambique?',opts:['Beira','Nampula','Maputo','Tete'],ans:2,hint:'Antiga Lourenço Marques'},
+  {q:'Qual é a moeda de Moçambique?',opts:['Kwanza','Rand','Metical','Shilling'],ans:2,hint:'Abreviatura MZN'},
+  {q:'Qual é a língua oficial de Moçambique?',opts:['Inglês','Francês','Suaíli','Português'],ans:3,hint:'Herança da colonização portuguesa'},
+  {q:'Quantas províncias tem Moçambique?',opts:['8','9','10','11'],ans:3,hint:'10 províncias + cidade de Maputo'},
+  {q:'Qual é o maior lago de Moçambique?',opts:['Lago Niassa','Lago Cahora Bassa','Lago Chiuta','Lago Amaramba'],ans:0,hint:'Partilhado com Tanzânia e Malawi'},
+  {q:'Em que rio fica a barragem de Cahora Bassa?',opts:['Rio Save','Rio Limpopo','Rio Zambeze','Rio Rovuma'],ans:2,hint:'Um dos maiores rios de África'},
+  {q:'Qual é o mineral mais explorado em Tete?',opts:['Ouro','Diamantes','Carvão','Rubis'],ans:2,hint:'Usado para produzir energia'},
+  {q:'Qual é a data da independência de Moçambique?',opts:['25 de Setembro','25 de Junho','7 de Setembro','3 de Fevereiro'],ans:1,hint:'Ano 1975'},
+  {q:'Qual é a maior cidade de Moçambique?',opts:['Beira','Nampula','Maputo','Quelimane'],ans:2,hint:'Também é a capital'},
+  {q:'Que país faz fronteira a norte com Moçambique?',opts:['Zimbábue','Zâmbia','Tanzânia','Malawi'],ans:2,hint:'O rio Rovuma é a fronteira'},
+  {q:'Qual é o actual Presidente de Moçambique?',opts:['Filipe Nyusi','Daniel Chapo','Armando Guebuza','Joaquim Chissano'],ans:1,hint:'Assumiu em Janeiro de 2025'},
+  {q:'Que oceano banha Moçambique a leste?',opts:['Atlântico','Pacífico','Ártico','Índico'],ans:3,hint:'Terceiro maior oceano'},
+  {q:'Qual é a universidade mais antiga de Moçambique?',opts:['UPM','UCM','UEM','UniLúrio'],ans:2,hint:'Universidade Eduardo Mondlane'},
+  {q:'Qual partido político governa Moçambique desde a independência?',opts:['RENAMO','MDM','FRELIMO','PDD'],ans:2,hint:'Frente de Libertação de Moçambique'},
+  {q:'Qual é a principal cultura de exportação de Moçambique?',opts:['Cacau','Tabaco','Café','Caju'],ans:3,hint:'Moçambique foi dos maiores produtores mundiais'},
+  {q:'Quantos países fazem fronteira com Moçambique?',opts:['4','5','6','7'],ans:2,hint:'Tanzânia, Malawi, Zâmbia, Zimbábue, África do Sul, Eswatini'},
+  {q:'Qual é o rio que separa Moçambique da Tanzânia?',opts:['Rio Zambeze','Rio Save','Rio Rovuma','Rio Limpopo'],ans:2,hint:'Fronteira norte de Moçambique'},
+  {q:'Em que província fica Tete?',opts:['Centro de Moçambique','Norte de Moçambique','Sul de Moçambique','Costa de Moçambique'],ans:0,hint:'Interior, sem litoral'},
+  {q:'Qual é a moeda de Moçambique antes do Metical?',opts:['Escudo','Libra','Franco','Real'],ans:0,hint:'Herdado da colonização portuguesa'},
+  {q:'Que empresa indiana opera a mina de Moatize em Tete?',opts:['Jindal Steel','Vulcan Mozambique','Tata Resources','Reliance Mining'],ans:1,hint:'Comprou os activos da Vale em 2022'},
+  {q:'Qual é o hino nacional de Moçambique?',opts:['Pátria Amada','Viva Moçambique','Pátria, Pátria','Avante Moçambique'],ans:1,hint:'Adoptado após a independência'},
+  {q:'Qual é a língua oficial de Moçambique?',opts:['Inglês','Português','Suaíli','Francês'],ans:1,hint:'Herança da colonização'},
+  {q:'Qual é a principal religião praticada em Moçambique?',opts:['Apenas Islão','Apenas Cristianismo','Cristianismo e Islão, com presença de religiões tradicionais','Apenas religiões tradicionais'],ans:2,hint:'País religiosamente diverso'},
+  {q:'Qual é o principal porto de Moçambique?',opts:['Porto de Beira','Porto de Maputo','Porto de Nacala','Porto de Pemba'],ans:1,hint:'Maior movimento de carga do país'},
+  {q:'Qual partido governou Moçambique desde a independência?',opts:['RENAMO','MDM','FRELIMO','PODEMOS'],ans:2,hint:'Frente de Libertação de Moçambique'},
+],
+medium:[
+  {q:'O que estabelece a Constituição de Moçambique sobre a terra?',opts:['A terra é propriedade privada dos cidadãos','A terra é propriedade do Estado e não pode ser vendida','A terra pertence às comunidades locais','A terra pode ser privatizada por estrangeiros'],ans:1,hint:'Art. 109 da CRM — terra é patrimônio do Estado'},
+  {q:'O que é o DUAT em Moçambique?',opts:['Documento de identificação','Direito de Uso e Aproveitamento da Terra','Registo de empresas','Autorização de construção'],ans:1,hint:'Lei de Terras 19/97'},
+  {q:'Qual é a função do Tribunal Supremo em Moçambique?',opts:['Legislar leis orgânicas','Órgão supremo do poder judicial que garante a legalidade','Fiscalizar o executivo','Eleger o Presidente da República'],ans:1,hint:'Art. 223 da CRM'},
+  {q:'O que é o EGFAE em Moçambique?',opts:['Lei do trabalho privado','Estatuto Geral dos Funcionários e Agentes do Estado','Código penal moçambicano','Regulamento das empresas públicas'],ans:1,hint:'Define direitos e deveres dos funcionários públicos'},
+  {q:'Qual é o principal desafio económico de Moçambique actualmente?',opts:['Excesso de exportações','Dívida pública elevada, pobreza e instabilidade no norte (Cabo Delgado)','Superpopulação nas cidades','Excesso de investimento estrangeiro'],ans:1,hint:'"Dívidas ocultas" e crise do terrorismo'},
+  {q:'O que é o Corredor de Nacala?',opts:['Rio do norte de Moçambique','Linha ferroviária e porto que liga o interior ao oceano Índico','Zona económica especial','Gasoduto de gás natural'],ans:1,hint:'Liga o interior de Malawi e Zâmbia ao porto de Nacala'},
+  {q:'Qual é o impacto do projecto de gás natural de Cabo Delgado?',opts:['Apenas benefícios económicos','Potencial de transformar a economia mas com conflito armado e deslocamentos comunitários','Apenas impacto ambiental negativo','Sem impacto significativo'],ans:1,hint:'TotalEnergies, ENI — maior investimento privado de África'},
+  {q:'O que é o SISTAFE em Moçambique?',opts:['Sistema de saúde familiar','Sistema de Administração Financeira do Estado','Sistema de informação territorial','Plataforma de registo civil'],ans:1,hint:'Gestão das finanças públicas'},
+  {q:'O que é a Zona Económica Exclusiva (ZEE) de Moçambique?',opts:['Zona industrial especial de Maputo','200 milhas náuticas de costa onde Moçambique tem direitos exclusivos sobre recursos','Zona franca comercial de Beira','Área protegida de conservação marítima'],ans:1,hint:'Convenção da ONU sobre o Direito do Mar'},
+  {q:'Qual é o papel do Conselho de Ministros em Moçambique?',opts:['Legislar e aprovar leis','Órgão executivo que coordena as políticas governamentais','Fiscalizar o Presidente','Eleger o Procurador-Geral'],ans:1,hint:'Art. 204 da CRM'},
+  {q:'O que é o Plano de Acção para a Redução da Pobreza (PARP)?',opts:['Plano militar de segurança','Estratégia nacional de desenvolvimento para reduzir a pobreza','Plano de privatização de empresas públicas','Acordo com o FMI sobre dívida externa'],ans:1,hint:'Instrumentos de planificação económica de Moçambique'},
+  {q:'Qual é a importância económica do porto de Beira?',opts:['Apenas exporta pescado','Principal porto para os países do interior — Zimbabué, Zâmbia, Malawi','Porto exclusivo de importação de petróleo','Porto militar da SADC'],ans:1,hint:'Corredor de Beira — acesso ao mar para países sem litoral'},
+  {q:'Qual é o regime político de Moçambique?',opts:['Monarquia constitucional','República presidencial multipartidária','República parlamentar','Estado federativo'],ans:1,hint:'Constituição de 2004, multipartidarismo desde 1990'},
+  {q:'O que é o MITADER em Moçambique?',opts:['Ministério da Indústria','Ministério da Terra, Ambiente e Desenvolvimento Rural','Ministério dos Transportes','Ministério da Defesa'],ans:1,hint:'Gestão de terras e ambiente'},
+  {q:'Qual é a importância da barragem de Cahora Bassa para Moçambique?',opts:['Apenas fornece água para irrigação','Gera electricidade exportada para África do Sul e fornece energia interna','É uma atracção turística principal','Controla cheias do Zambeze'],ans:1,hint:'Uma das maiores hidroeléctricas de África'},
+  {q:'Qual é o papel do Banco de Moçambique?',opts:['Banco comercial privado','Banco central responsável pela política monetária e emissão de moeda','Fundo de pensões do Estado','Banco de investimento estrangeiro'],ans:1,hint:'Regula a inflação e a estabilidade da moeda nacional'},
+  {q:'Qual é a importância do gás natural de Cabo Delgado para a economia moçambicana?',opts:['Pouco relevante para o PIB','Representa um dos maiores projectos de investimento estrangeiro, com potencial para transformar a economia nacional','Apenas usado para consumo interno','Já esgotado completamente'],ans:1,hint:'Reservas na Bacia do Rovuma, projectos da TotalEnergies e ENI'},
+  {q:'O que é a Autoridade Tributária de Moçambique (AT)?',opts:['Tribunal fiscal','Instituição responsável pela cobrança de impostos e direitos aduaneiros','Banco de desenvolvimento','Ministério das Finanças'],ans:1,hint:'Criada pela Lei 1/2006'},
+  {q:'Qual é o significado do corredor de Nacala para a economia regional?',opts:['Liga apenas cidades moçambicanas','Liga o Malawi ao Oceano Índico via Moçambique, facilitando o comércio regional','É exclusivamente uma rota turística','Serve apenas o transporte de passageiros'],ans:1,hint:'Inclui ferrovia e porto de Nacala-a-Velha'},
+  {q:'Qual é o papel das comunidades locais na gestão de recursos naturais em Moçambique?',opts:['Não têm qualquer participação legal','A lei prevê consulta comunitária e benefícios partilhados em projectos que afectam terras comunitárias','Apenas o governo central decide','Apenas empresas privadas decidem'],ans:1,hint:'Lei de Terras prevê consulta às comunidades'},
+  {q:'O que caracteriza o sistema de governação descentralizada em Moçambique?',opts:['Todo o poder está apenas no governo central','Transferência progressiva de competências para províncias e distritos, incluindo eleição de governadores provinciais desde 2024','Não existe descentralização no país','Apenas Maputo tem autonomia administrativa'],ans:1,hint:'Reforma constitucional de 2018 introduziu eleição de governadores'},
+  {q:'Qual é a relevância do Porto da Beira para a região centro de Moçambique e países vizinhos?',opts:['Serve apenas pesca artesanal','É a principal porta de saída para o Zimbabwe, Zâmbia e Malawi via o Corredor da Beira','Não tem ligação ferroviária','Está inactivo desde os anos 80'],ans:1,hint:'Corredor da Beira liga ao interior da África Austral'},
+  {q:'O que é o Fundo de Estradas em Moçambique?',opts:['Empresa de construção privada','Instituição responsável pelo financiamento da manutenção e construção da rede viária nacional','Banco de microcrédito rural','Seguradora de veículos'],ans:1,hint:'Financiado por taxas sobre combustíveis'},
+  {q:'Qual foi o impacto do ciclone Idai (2019) em Moçambique?',opts:['Afectou apenas a capital Maputo','Devastou a Beira e regiões centrais, sendo um dos ciclones mais destrutivos da história recente de África','Não causou danos significativos','Afectou apenas a agricultura do sul'],ans:1,hint:'Mais de mil mortos e destruição massiva de infra-estruturas'},
+  {q:'Qual é o papel do Instituto Nacional de Gestão de Calamidades (INGC) em Moçambique?',opts:['Gerir apenas o turismo nacional','Coordenar a prevenção, resposta e recuperação face a desastres naturais como ciclones, cheias e secas','Fiscalizar o sistema bancário','Administrar parques nacionais'],ans:1,hint:'Activo durante ciclones como Idai e Freddy'},
+],
+hard:[
+  {q:'O que estabelece o artigo 109 da CRM sobre a propriedade da terra?',opts:['A terra é propriedade privada dos cidadãos','A terra é propriedade do Estado — o direito que os cidadãos têm é o de uso e aproveitamento, não de propriedade','A terra pertence às comunidades tradicionais','A terra pode ser alienada após 30 anos de uso'],ans:1,hint:'Lei de Terras 19/97 regulamenta o DUAT'},
+  {q:'Qual é o impacto jurídico do Decreto 30/2001 na administração pública moçambicana?',opts:['Criou o sistema judicial','Estabeleceu normas de funcionamento dos serviços públicos, incluindo prazos, atendimento e organização interna','Regulamentou o sistema fiscal','Criou o estatuto das autarquias'],ans:1,hint:'15 de Outubro de 2001 — normas de funcionamento dos serviços'},
+  {q:'O que é o princípio da legalidade na administração pública moçambicana?',opts:['O funcionário obedece apenas às ordens do superior','A administração só pode agir com base em lei — nenhum acto é válido sem fundamento legal','O Estado pode agir sem lei em casos de emergência','A legalidade aplica-se apenas ao sector privado'],ans:1,hint:'Base do Estado de Direito — art. 3 da CRM'},
+  {q:'Qual é a distinção entre desconcentração e descentralização na administração pública moçambicana?',opts:['São sinónimos na lei moçambicana','Desconcentração transfere competências dentro da hierarquia do Estado; descentralização cria entidades autónomas como autarquias','Descentralização é apenas financeira','Desconcentração aplica-se apenas ao sector de saúde'],ans:1,hint:'Art. 249 e 271 da CRM — autarquias são descentralização'},
+  {q:'Qual é o papel do Tribunal Administrativo de Moçambique?',opts:['Julgar crimes comuns','Fiscalizar a legalidade dos actos administrativos, julgar conflitos entre o Estado e cidadãos e controlar a gestão financeira do Estado','Supervisionar as eleições','Julgar crimes de terrorismo'],ans:1,hint:'Art. 228 da CRM — fiscalização e controlo jurisdicional'},
+  {q:'O que é o PARPA e como se relaciona com os ODM?',opts:['Plano militar de resposta a catástrofes','Plano de Acção para a Redução da Pobreza Absoluta — alinhado com os Objectivos de Desenvolvimento do Milénio da ONU','Programa de ajuda alimentar da FAO','Plano de privatizações do sector público'],ans:1,hint:'Moçambique comprometeu-se com os ODM para 2015'},
+  {q:'Qual é o impacto jurídico da Lei 14/2011 (Lei do Trabalho) nos contratos de trabalho?',opts:['Permite contratos sem prazo definido para qualquer trabalhador','Regula tipos de contratos, períodos experimentais, direitos e deveres — proíbe despedimento sem justa causa','Permite despedimento sem indemnização','Aplica-se apenas ao sector privado'],ans:1,hint:'Art. 141 permite rescisão por dificuldades económicas com processo formal'},
+  {q:'Como a Lei Orgânica do Ministério da Justiça define as suas atribuições principais?',opts:['Apenas o sistema penitenciário','Acesso à justiça, sistema judicial e penitenciário, registo civil, notariado, assuntos religiosos e constitucionais','Apenas o registo civil e notariado','Apenas a fiscalização judicial'],ans:1,hint:'IPAJ, SERNAP, Conservatórias, Assuntos Religiosos'},
+  {q:'O que é o princípio da imparcialidade na função pública moçambicana e como se aplica?',opts:['Funcionário serve apenas o partido no poder','Funcionário deve tratar todos os cidadãos com igualdade, sem favorecimento pessoal, político ou familiar','Imparcialidade aplica-se apenas em processos judiciais','Princípio apenas para cargos de direcção'],ans:1,hint:'EGFAE — deveres do funcionário público'},
+  {q:'Qual é a diferença entre infracção disciplinar leve e grave no EGFAE?',opts:['Não existe diferença formal','Leve: punida com advertência ou repreensão; grave: pode resultar em suspensão, multa ou demissão','Toda infracção resulta em demissão','O EGFAE não classifica infrações'],ans:1,hint:'O processo disciplinar varia conforme a gravidade'},
+  {q:'O que é o processo de audiência prévia no direito administrativo moçambicano?',opts:['Reunião informal entre partes','Direito do cidadão/funcionário de ser ouvido antes de decisão administrativa desfavorável — princípio do contraditório','Procedimento exclusivo de processos judiciais','Consulta opcional do superior hierárquico'],ans:1,hint:'Garante o direito de defesa antes da decisão'},
+  {q:'Como a Constituição de Moçambique protege a liberdade religiosa?',opts:['O Estado tem religião oficial — o Islão','O Estado é laico e garante liberdade de religião e culto a todos os cidadãos','Apenas as religiões registadas têm protecção','A liberdade religiosa é limitada a espaços privados'],ans:1,hint:'Art. 54 e 12 da CRM — Estado laico'},
+  {q:'O que é o princípio da proporcionalidade na administração pública?',opts:['O Estado deve maximizar as suas atribuições','Os actos administrativos devem ser adequados, necessários e proporcionais ao fim que visam atingir','Todos os actos têm o mesmo peso jurídico','Proporcionalidade aplica-se apenas às sanções fiscais'],ans:1,hint:'Base do direito administrativo moderno — limita o excesso de poder'},
+  {q:'Qual é a importância estratégica do gás natural de Cabo Delgado para a economia moçambicana a longo prazo?',opts:['Impacto mínimo — Moçambique tem pouca reserva','Potencial de multiplicar o PIB e transformar Moçambique num dos maiores exportadores de GNL, mas condicionado à estabilidade de segurança','O gás já está a ser explorado plenamente sem obstáculos','Beneficia apenas as empresas estrangeiras sem impacto nacional'],ans:1,hint:'Reservas estimadas em 150 trilhões de pés cúbicos — 5ª maior reserva de África'},
+  {q:'O que é o SISTAFE e qual é a sua importância para a gestão financeira do Estado moçambicano?',opts:['Sistema de saúde familiar electrónico','Sistema Integrado de Administração Financeira do Estado — garante transparência, controlo e eficiência nas finanças públicas','Sistema de registo de propriedades','Plataforma de gestão de recursos humanos'],ans:1,hint:'e-SISTAFE é a versão electrónica — base do controlo orçamental'},
+  {q:'Qual é o papel do Tribunal Administrativo em Moçambique?',opts:['Julga apenas crimes comuns','Fiscaliza a legalidade dos actos administrativos e a execução do Orçamento do Estado','É um órgão exclusivamente consultivo sem poder decisório','Substitui o Tribunal Supremo'],ans:1,hint:'Também emite o relatório anual sobre as Contas do Estado'},
+  {q:'O que distingue a desconcentração da descentralização administrativa em Moçambique?',opts:['São sinónimos','Desconcentração transfere competências dentro da mesma pessoa jurídica do Estado; descentralização cria entidades autónomas com personalidade jurídica própria, como as autarquias','Desconcentração só existe a nível central','Descentralização elimina o poder central'],ans:1,hint:'Autarquias locais são exemplo de descentralização'},
+  {q:'Qual é a relevância do princípio da legalidade para a administração pública moçambicana?',opts:['A administração pode agir livremente sem limites legais','A administração só pode agir dentro do que a lei permite ou exige, garantindo segurança jurídica aos cidadãos','Aplica-se apenas ao poder judicial','É um princípio apenas teórico sem aplicação prática'],ans:1,hint:'Base do Estado de Direito democrático'},
+  {q:'Qual é a função do Conselho Constitucional em Moçambique?',opts:['Julgar crimes eleitorais apenas','Fiscalizar a constitucionalidade das leis e validar resultados eleitorais nacionais','Substituir o parlamento em casos de crise','Gerir o orçamento do Estado'],ans:1,hint:'Órgão criado pela Constituição de 2004'},
+  {q:'O que estabelece a Lei do Trabalho moçambicana sobre o período experimental?',opts:['Não existe período experimental em Moçambique','Permite às partes rescindirem o contrato sem aviso prévio durante um período inicial definido por lei, conforme a categoria profissional','É sempre de 12 meses para qualquer trabalhador','Aplica-se apenas a contratos a termo certo'],ans:1,hint:'Lei 23/2007 — varia entre 30 a 180 dias conforme a função'},
+  {q:'Qual é a importância da Visão Estratégica do Sector Mineiro de Moçambique?',opts:['Documento sem implicação prática','Orienta a exploração sustentável de recursos minerais, promovendo valor acrescentado local e maior arrecadação fiscal','Aplica-se apenas a empresas estrangeiras','Foca exclusivamente na exportação de carvão'],ans:1,hint:'Busca equilibrar investimento estrangeiro com benefícios nacionais'},
+  {q:'O que caracteriza o regime de concessões mineiras em Moçambique segundo a Lei de Minas?',opts:['Os recursos minerais pertencem a quem os descobre','Os recursos minerais do subsolo são propriedade do Estado, que concede direitos de exploração mediante título mineiro','Qualquer pessoa pode explorar minérios sem autorização','Aplica-se apenas a empresas nacionais'],ans:1,hint:'Lei 20/2014 regula o sector mineiro'},
+  {q:'Qual é a relevância do princípio do contraditório no processo administrativo moçambicano?',opts:['Não se aplica a processos administrativos','Garante ao interessado o direito de ser ouvido e apresentar a sua defesa antes de uma decisão administrativa desfavorável','Aplica-se apenas em tribunais penais','É opcional, a critério da administração'],ans:1,hint:'Princípio fundamental do devido processo administrativo'},
+  {q:'O que estabelece a Constituição sobre o estado de emergência em Moçambique?',opts:['Pode ser declarado por qualquer ministro sem limites','Permite a suspensão temporária e limitada de certos direitos, sob controlo da Assembleia da República, em situações excepcionais','Suspende permanentemente a Constituição','Aplica-se apenas em caso de guerra externa'],ans:1,hint:'Art. 282-284 da CRM regulam estados de excepção'},
+  {q:'Qual é o papel da Inspecção-Geral das Finanças (IGF) no sistema de controlo do Estado moçambicano?',opts:['É um órgão exclusivamente consultivo sem poder de fiscalização','Realiza auditorias e inspecções à gestão dos recursos públicos para garantir legalidade e boa governação financeira','Substitui o Tribunal Administrativo','Apenas regula o sistema bancário privado'],ans:1,hint:'Órgão de controlo interno do Ministério das Finanças'},
+]
+},
+math:{
+easy:[
+  {q:'Quanto é 15 × 8?',opts:['110','120','125','130'],ans:1,hint:'15×8 = 15×4×2'},
+  {q:'Qual é a raiz quadrada de 144?',opts:['11','12','13','14'],ans:1,hint:'12×12=144'},
+  {q:'Quanto é 25% de 200?',opts:['40','45','50','55'],ans:2,hint:'Um quarto de 200'},
+  {q:'Se x + 5 = 12, quanto é x?',opts:['5','6','7','8'],ans:2,hint:'12 - 5 = ?'},
+  {q:'Quanto é 2 elevado a 10?',opts:['512','1024','2048','256'],ans:1,hint:'2×2×2×2×2×2×2×2×2×2'},
+  {q:'Qual é o resultado de 7³?',opts:['343','441','216','512'],ans:0,hint:'7×7×7'},
+  {q:'Num triângulo rectângulo com catetos 3 e 4, qual é a hipotenusa?',opts:['4','5','6','7'],ans:1,hint:'a²+b²=c² — lei de Pitágoras'},
+  {q:'Quanto é 1000 ÷ 25?',opts:['30','35','40','45'],ans:2,hint:'1000/25 = 40'},
+  {q:'Qual é a área de um quadrado com lado 9?',opts:['18','36','72','81'],ans:3,hint:'lado × lado'},
+  {q:'Quanto é a soma dos ângulos internos de um triângulo?',opts:['90°','180°','270°','360°'],ans:1,hint:'Sempre 180°'},
+  {q:'Quanto é 0,5 × 0,5?',opts:['1','0,5','0,25','0,1'],ans:2,hint:'Metade de metade'},
+  {q:'Qual é o valor de π aproximado?',opts:['3,14','3,41','2,14','4,13'],ans:0,hint:'Usado em cálculos de circunferência'},
+  {q:'Se um produto custa 500 MT com 20% de desconto, qual é o preço final?',opts:['350 MT','400 MT','420 MT','450 MT'],ans:1,hint:'500 × 0,80'},
+  {q:'Qual é o mínimo múltiplo comum de 4 e 6?',opts:['8','10','12','24'],ans:2,hint:'Múltiplos de 4: 4,8,12... e de 6: 6,12...'},
+  {q:'Quanto é 3/4 + 1/4?',opts:['1/2','3/8','1','4/4'],ans:2,hint:'Mesmos denominadores'},
+  {q:'Qual é o número primo entre 10 e 15?',opts:['10','11','12','14'],ans:1,hint:'Só divisível por 1 e por si mesmo'},
+  {q:'Qual é o maior número primo menor que 20?',opts:['17','18','19','16'],ans:2,hint:'19 é primo'},
+  {q:'Quanto é 3,5 × 2?',opts:['6','7','6,5','8'],ans:1,hint:'3,5 + 3,5'},
+  {q:'Qual é o perímetro de um rectângulo 5×3?',opts:['15','16','30','8'],ans:1,hint:'2×(5+3)'},
+  {q:'Quanto é 100 − 37?',opts:['53','63','73','57'],ans:1,hint:'100 − 30 − 7'},
+  {q:'Quanto é 12 × 8?',opts:['86','96','106','116'],ans:1,hint:'12 × 8 = 12 × 10 − 12 × 2'},
+  {q:'Qual é a metade de 250?',opts:['100','125','150','75'],ans:1,hint:'250 ÷ 2'},
+  {q:'Quanto é 9²?',opts:['72','81','90','99'],ans:1,hint:'9 × 9'},
+  {q:'Quanto é 144 ÷ 12?',opts:['10','11','12','13'],ans:2,hint:'12 × 12 = 144'},
+  {q:'Qual é o resultado de 7 + 8 × 2?',opts:['30','23','22','21'],ans:1,hint:'Multiplicação antes da soma'},
+],
+medium:[
+  {q:'Qual é a solução da equação 2x + 3 = 11?',opts:['x=3','x=4','x=5','x=7'],ans:1,hint:'2x = 8, x = ?'},
+  {q:'Qual é o determinante da matriz [[2,1],[3,4]]?',opts:['5','8','11','−1'],ans:0,hint:'ad − bc = 2×4 − 1×3'},
+  {q:'Qual é a derivada de f(x) = x³?',opts:['x²','3x','3x²','x³'],ans:2,hint:'Regra da potência: n×x^(n-1)'},
+  {q:'Qual é a integral de f(x) = 2x?',opts:['x','2x²','x² + C','2x + C'],ans:2,hint:'Integral de 2x = x² + C'},
+  {q:'Numa progressão aritmética com a₁=3 e r=4, qual é o 5º termo?',opts:['15','17','19','23'],ans:2,hint:'aₙ = a₁ + (n−1)r = 3 + 4×4'},
+  {q:'Qual é o valor de log₁₀(1000)?',opts:['2','3','4','10'],ans:1,hint:'10³ = 1000'},
+  {q:'Qual é o seno de 30°?',opts:['√3/2','1/2','√2/2','1'],ans:1,hint:'Triângulo 30-60-90: sen30° = 1/2'},
+  {q:'Qual é a fórmula do volume de uma esfera de raio r?',opts:['πr²','4/3πr³','2πr','4πr²'],ans:1,hint:'Quatro terços de pi r ao cubo'},
+  {q:'Qual é a solução do sistema: x+y=5 e x−y=1?',opts:['x=2,y=3','x=3,y=2','x=4,y=1','x=1,y=4'],ans:1,hint:'Some as equações: 2x=6, x=3'},
+  {q:'Qual é o número de combinações de 5 elementos tomados 2 a 2?',opts:['10','15','20','25'],ans:0,hint:'C(5,2) = 5!/(2!×3!) = 10'},
+  {q:'Se f(x) = 2x + 1, qual é f(f(3))?',opts:['13','14','15','7'],ans:2,hint:'f(3)=7; f(7)=2×7+1=15'},
+  {q:'Qual é a equação da recta que passa em (0,2) com declive 3?',opts:['y=3x','y=2x+3','y=3x+2','y=3x−2'],ans:2,hint:'y = mx + b, b é a ordenada na origem'},
+  {q:'Qual é o resultado de (a+b)²?',opts:['a²+b²','a²+ab+b²','a²+2ab+b²','2a+2b'],ans:2,hint:'Binómio quadrado — produto notável'},
+  {q:'Numa urna com 3 bolas vermelhas e 2 azuis, qual é a probabilidade de tirar uma vermelha?',opts:['1/5','2/5','3/5','4/5'],ans:2,hint:'3 favoráveis em 5 possíveis'},
+  {q:'Qual é a área de um triângulo com base 6 e altura 4?',opts:['12','24','10','8'],ans:0,hint:'A = base×altura/2'},
+  {q:'Qual é o valor de 5! (factorial de 5)?',opts:['20','60','120','240'],ans:2,hint:'5×4×3×2×1'},
+  {q:'Qual é a distância entre os pontos (0,0) e (3,4)?',opts:['3','4','5','7'],ans:2,hint:'√(3²+4²) = √25'},
+  {q:'Qual é a soma dos termos de uma PA com a₁=1, aₙ=99 e n=50?',opts:['2000','2400','2500','3000'],ans:2,hint:'Sₙ = n(a₁+aₙ)/2 = 50×100/2'},
+  {q:'Qual é a solução de x² − 5x + 6 = 0?',opts:['x=1 e x=6','x=2 e x=3','x=−2 e x=−3','x=1 e x=5'],ans:1,hint:'Factoriza: (x−2)(x−3)=0'},
+  {q:'Qual é o valor de sen²(x) + cos²(x)?',opts:['0','sen(2x)','1','2'],ans:2,hint:'Identidade trigonométrica fundamental'},
+  {q:'Qual é a área de um círculo de raio 7?',opts:['44π','49π','21π','14π'],ans:1,hint:'A = πr²'},
+  {q:'Qual é o valor de log₂(8)?',opts:['2','3','4','8'],ans:1,hint:'2³ = 8'},
+  {q:'Qual é a derivada de f(x) = x³?',opts:['x²','3x','3x²','x⁴/4'],ans:2,hint:'Regra da potência: n·xⁿ⁻¹'},
+  {q:'Qual é o valor de 5! (factorial de 5)?',opts:['25','60','100','120'],ans:3,hint:'5×4×3×2×1'},
+  {q:'Qual é a probabilidade de sair "cara" duas vezes em dois lançamentos de moeda?',opts:['1/2','1/3','1/4','1/8'],ans:2,hint:'½ × ½'},
+],
+hard:[
+  {q:'Qual é o limite de (sen x)/x quando x→0?',opts:['0','∞','1','indefinido'],ans:2,hint:'Regra de L\'Hôpital ou série de Taylor'},
+  {q:'O que é o teorema de Bolzano-Weierstrass?',opts:['Toda função contínua tem integral','Toda sequência limitada tem uma subsequência convergente','Todo polinómio tem raízes complexas','A derivada de uma função contínua existe'],ans:1,hint:'Base da análise matemática real'},
+  {q:'Qual é a solução geral da equação diferencial dy/dx = ky?',opts:['y = kx + C','y = Ce^(kx)','y = k/x','y = Cx²'],ans:1,hint:'Crescimento/decaimento exponencial'},
+  {q:'O que é o teorema fundamental do cálculo?',opts:['A derivada e a integral são operações não relacionadas','A integral definida de f em [a,b] é F(b)−F(a) onde F\'=f, ligando derivação e integração','Toda função integrável é derivável','A soma de Riemann converge para qualquer função'],ans:1,hint:'Newton e Leibniz — ponte entre derivada e integral'},
+  {q:'O que é um espaço vectorial sobre um corpo?',opts:['Conjunto de vectores no plano cartesiano','Conjunto com operações de adição e multiplicação escalar satisfazendo 8 axiomas','Matriz quadrada invertível','Sistema de equações lineares'],ans:1,hint:'Base da álgebra linear abstracta'},
+  {q:'Qual é o número de grupos de ordem prima p, segundo a teoria de grupos?',opts:['p grupos distintos','Vários dependendo de p','Apenas um — o grupo cíclico Zp','Depende se p é par ou ímpar'],ans:2,hint:'Teorema de Cauchy — grupo de ordem prima é sempre cíclico'},
+  {q:'O que é a transformada de Fourier e para que serve?',opts:['Transformação de sistemas de equações lineares','Decomposição de funções em soma de funções sinusoidais — usada em processamento de sinais','Método de resolução de EDO de ordem superior','Técnica de integração por partes generalizada'],ans:1,hint:'f̂(ξ) = ∫f(x)e^(−2πiξx)dx — base do processamento digital'},
+  {q:'O que é a hipótese de Riemann?',opts:['Todo número par > 2 é soma de dois primos','Os zeros não triviais da função zeta de Riemann têm parte real 1/2','Todo polinómio tem pelo menos uma raiz complexa','A série harmónica diverge'],ans:1,hint:'Um dos 7 Problemas do Milénio — ainda por provar'},
+  {q:'O que é o teorema de Gödel da incompletude?',opts:['Todo sistema matemático é completo e consistente','Em qualquer sistema formal suficientemente expressivo, existem proposições verdadeiras que não podem ser provadas dentro do sistema','A matemática pode ser reduzida à lógica','Todo conjunto infinito tem o mesmo cardinal'],ans:1,hint:'1931 — abalou os fundamentos da matemática'},
+  {q:'Qual é a solução do problema dos valores próprios Ax=λx?',opts:['x é qualquer vector; λ=0','λ são valores para os quais det(A−λI)=0 — polinómio característico','A solução existe apenas se A é invertível','λ é sempre um número inteiro positivo'],ans:1,hint:'Eigenvalues — base da diagonalização e PCA'},
+  {q:'O que é a série de Taylor de e^x?',opts:['1 + x + x²/2','∑(xⁿ/n!) para n=0 a ∞','x + x³/6 + x⁵/120','1 + x²/2 + x⁴/24'],ans:1,hint:'e^x = 1 + x + x²/2! + x³/3! + ...'},
+  {q:'O que é a topologia e o que é um espaço topológico?',opts:['Estudo de polígonos e superfícies geométricas','Estudo das propriedades que se mantêm sob deformações contínuas; espaço topológico = conjunto com colecção de abertos satisfazendo axiomas','Geometria de superfícies curvas','Álgebra de transformações lineares'],ans:1,hint:'Homeomorfismo — caneca e donut são topologicamente equivalentes'},
+  {q:'O que é a conjectura de Goldbach?',opts:['Todo número primo é soma de dois quadrados','Todo número par maior que 2 é soma de dois números primos','Todo número ímpar é primo ou produto de primos','A série de números primos é infinita'],ans:1,hint:'1742 — verificada até 4×10¹⁸ mas não provada'},
+  {q:'O que é a medida de Lebesgue e por que supera a integral de Riemann?',opts:['São equivalentes em todos os casos','Lebesgue generaliza a integração para funções e conjuntos que Riemann não consegue tratar, como funções com infinitas descontinuidades','Lebesgue é mais simples e aplicada','Riemann é mais geral que Lebesgue'],ans:1,hint:'Base da teoria moderna da probabilidade e análise funcional'},
+  {q:'O que é o método dos elementos finitos (MEF)?',opts:['Método algébrico para sistemas lineares','Método numérico que divide um domínio em elementos pequenos para resolver EDPs — usado em engenharia estrutural','Técnica de integração numérica','Método de Monte Carlo para simulações'],ans:1,hint:'Ansys, Abaqus — base da simulação em engenharia'},
+  {q:'O que é o Teorema Fundamental do Cálculo?',opts:['Relaciona derivação e integração como operações inversas','Define o limite de uma sequência','Estabelece a continuidade de funções polinomiais','Calcula a área de qualquer polígono'],ans:0,hint:'Liga a área sob a curva à antiderivada'},
+  {q:'O que é uma matriz hermitiana?',opts:['Matriz com determinante zero','Matriz complexa igual à sua própria transposta conjugada','Matriz apenas com números reais','Matriz sem inversa'],ans:1,hint:'Generaliza matrizes simétricas para números complexos'},
+  {q:'O que é a transformada de Fourier?',opts:['Método de resolver equações algébricas','Ferramenta que decompõe uma função no domínio do tempo em componentes de frequência','Técnica de integração por partes','Método de aproximação de raízes'],ans:1,hint:'Fundamental em processamento de sinais'},
+  {q:'O que é o Teorema de Gödel da incompletude?',opts:['Toda afirmação matemática pode ser provada ou refutada','Em qualquer sistema formal consistente suficientemente complexo, existem afirmações verdadeiras que não podem ser provadas dentro do sistema','A matemática é totalmente baseada em axiomas auto-evidentes','Todos os números são computáveis'],ans:1,hint:'1931 — revolucionou a lógica matemática'},
+  {q:'O que caracteriza um espaço vectorial em álgebra linear?',opts:['Conjunto de números reais apenas','Conjunto de elementos (vectores) com operações de soma e multiplicação escalar satisfazendo certos axiomas','Conjunto finito de pontos no plano','Sistema de equações lineares apenas'],ans:1,hint:'Generaliza ℝⁿ para estruturas abstractas'},
+  {q:'O que é a distribuição normal (Gaussiana) em estatística?',opts:['Distribuição uniforme de probabilidades','Distribuição de probabilidade simétrica em forma de sino, caracterizada pela média e desvio padrão','Distribuição apenas de valores inteiros','Distribuição exclusivamente discreta'],ans:1,hint:'Base do Teorema do Limite Central'},
+  {q:'O que é uma equação diferencial parcial (EDP)?',opts:['Equação com apenas uma variável independente','Equação envolvendo derivadas parciais de uma função com várias variáveis independentes','Equação puramente algébrica sem derivadas','Sistema de inequações lineares'],ans:1,hint:'Ex: equação do calor, equação de onda'},
+  {q:'O que é o número de Euler (e) e qual a sua importância?',opts:['Constante irracional ≈2,718, base dos logaritmos naturais e fundamental em crescimento exponencial','Número racional usado apenas em geometria','Constante usada só em trigonometria','Valor exacto de π/2'],ans:0,hint:'Aparece em juros compostos contínuos e em e^(iπ)+1=0'},
+  {q:'O que é a topologia em matemática?',opts:['Estudo da forma exacta de figuras geométricas','Ramo que estuda propriedades que se preservam sob deformações contínuas, como conexidade e compacidade','Estudo apenas de superfícies planas','Cálculo de áreas e volumes'],ans:1,hint:'Uma caneca e um donut são topologicamente equivalentes'},
+  {q:'O que é um número complexo e qual a sua forma geral?',opts:['Número apenas com parte real','Número da forma a+bi, onde i é a unidade imaginária (i²=−1), combinando parte real e imaginária','Número irracional não periódico','Fracção entre dois números primos'],ans:1,hint:'Usado para resolver equações sem raízes reais'},
+]
+},
+cult:{
+easy:[
+  {q:'Quantos jogadores tem uma equipa de futebol?',opts:['9','10','11','12'],ans:2,hint:'Onze titulares'},
+  {q:'Quem pintou a Mona Lisa?',opts:['Miguel Ângelo','Leonardo da Vinci','Picasso','Van Gogh'],ans:1,hint:'Génio italiano do Renascimento'},
+  {q:'Quantos anéis tem a bandeira olímpica?',opts:['4','5','6','7'],ans:1,hint:'Representam os 5 continentes'},
+  {q:'Em que país foi inventado o futebol moderno?',opts:['Brasil','Espanha','Inglaterra','Itália'],ans:2,hint:'País da Premier League'},
+  {q:'Qual país ganhou mais Copas do Mundo?',opts:['Alemanha','Argentina','Itália','Brasil'],ans:3,hint:'5 títulos mundiais'},
+  {q:'Quantos lados tem um hexágono?',opts:['5','6','7','8'],ans:1,hint:'Forma das células de favo de mel'},
+  {q:'Quem escreveu Dom Quixote?',opts:['Shakespeare','Camões','Cervantes','Dante'],ans:2,hint:'Escritor espanhol do século XVII'},
+  {q:'Qual é a sétima nota musical?',opts:['Lá','Si','Sol','Fá'],ans:1,hint:'Dó Ré Mi Fá Sol Lá...'},
+  {q:'Qual animal é o símbolo da WWF?',opts:['Elefante','Panda','Tigre','Leão'],ans:1,hint:'Urso preto e branco da China'},
+  {q:'Qual é o instrumento principal do jazz?',opts:['Guitarra','Violino','Saxofone','Flauta'],ans:2,hint:'Inventado por Adolphe Sax'},
+  {q:'Qual é o país de origem do sushi?',opts:['China','Coreia','Japão','Tailândia'],ans:2,hint:'País do sol nascente'},
+  {q:'Quem foi Shakespeare?',opts:['Pintor renascentista','Dramaturgo e poeta inglês do século XVI','Filósofo grego','Compositor austríaco'],ans:1,hint:'Hamlet, Romeu e Julieta, Macbeth'},
+  {q:'Qual é o maior estádio de futebol do mundo?',opts:['Camp Nou','Maracanã','Wembley','Rungrado'],ans:3,hint:'Fica na Coreia do Norte — 114 mil lugares'},
+  {q:'Qual é a arte de dobrar papel do Japão?',opts:['Bonsai','Ikebana','Origami','Karate'],ans:2,hint:'Cria figuras com papel dobrado'},
+  {q:'Pelé jogava em que posição?',opts:['Defesa central','Guarda-redes','Avançado','Médio defensivo'],ans:2,hint:'Rei do futebol — atacante'},
+  {q:'Em que país nasceu Mozart?',opts:['Alemanha','Suíça','Itália','Áustria'],ans:3,hint:'Salzburgo, 1756'},
+  {q:'Quantas cordas tem uma guitarra clássica?',opts:['4','5','6','7'],ans:2,hint:'Mi Lá Ré Sol Si Mi'},
+  {q:'Que cor se obtém misturando azul e amarelo?',opts:['Roxo','Laranja','Verde','Castanho'],ans:2,hint:'Cor das folhas das árvores'},
+  {q:'Qual é o desporto mais praticado no mundo?',opts:['Basquetebol','Futebol','Ténis','Críquete'],ans:1,hint:'4 mil milhões de adeptos'},
+  {q:'Quem foi Beethoven?',opts:['Pintor alemão','Compositor alemão que ficou surdo','Filósofo austríaco','Escritor romântico'],ans:1,hint:'Sinfonia nº 9 — composta já surdo'},
+  {q:'Quem pintou a Mona Lisa?',opts:['Michelangelo','Rafael','Leonardo da Vinci','Donatello'],ans:2,hint:'Pintor e inventor renascentista italiano'},
+  {q:'Qual é a dança tradicional moçambicana com máscaras de madeira?',opts:['Marrabenta','Mapiko','Tufo','Xigubo'],ans:1,hint:'Praticada pelo povo Makonde'},
+  {q:'Quem escreveu "Os Lusíadas"?',opts:['Fernando Pessoa','Luís de Camões','José Saramago','Eça de Queirós'],ans:1,hint:'Poeta épico português do séc. XVI'},
+  {q:'Qual é o instrumento musical típico de Moçambique feito de cabaças e madeira?',opts:['Marimba','Tambor','Berimbau','Kora'],ans:0,hint:'Popular na província de Gaza e Inhambane'},
+  {q:'Quem foi Bob Marley?',opts:['Cantor de jazz americano','Cantor jamaicano de reggae','Compositor clássico britânico','DJ sul-africano'],ans:1,hint:'Famoso por "No Woman, No Cry"'},
+],
+medium:[
+  {q:'O que é o Renascimento?',opts:['Movimento político europeu do século XV','Movimento cultural e artístico do século XIV-XVII que retomou a arte e filosofia greco-romana','Reforma religiosa protestante','Sistema económico pré-capitalista'],ans:1,hint:'Itália — Da Vinci, Miguel Ângelo, Rafael'},
+  {q:'O que é o impressionismo na pintura?',opts:['Estilo de pintura abstracta sem forma definida','Estilo do séc. XIX que captava impressões de luz e movimento em vez de detalhes rigorosos','Pintura realista de cenas históricas','Estilo medieval de iluminuras religiosas'],ans:1,hint:'Monet, Renoir, Degas — pinceladas rápidas e luz'},
+  {q:'O que é a ópera?',opts:['Peça de teatro falado com música de fundo','Forma de teatro em que todo o texto é cantado com acompanhamento orquestral','Composição musical instrumental sem voz','Dança clássica com música ao vivo'],ans:1,hint:'Mozart, Verdi, Puccini — Teatro alla Scala, Milão'},
+  {q:'O que é o existencialismo?',opts:['Filosofia que nega a existência humana','Filosofia que afirma que a existência precede a essência — o homem define-se pelas suas escolhas','Teoria política de Marx','Sistema ético de Kant'],ans:1,hint:'Sartre, Camus, Simone de Beauvoir'},
+  {q:'O que é o modernismo literário?',opts:['Literatura medieval europeia','Movimento literário do início do século XX que experimentou novas formas narrativas e questionou as convenções tradicionais','Escola realista portuguesa','Romantismo brasileiro'],ans:1,hint:'Joyce, Kafka, Pessoa, Virginia Woolf'},
+  {q:'O que é o jazz e onde surgiu?',opts:['Música clássica europeia do século XIX','Género musical surgido em Nova Orleães no início do séc. XX, combinando blues, ragtime e tradições africanas','Música folclórica do sul dos EUA','Música de câmara americana'],ans:1,hint:'Louis Armstrong, Miles Davis, John Coltrane'},
+  {q:'O que é a arquitectura barroca?',opts:['Arquitectura minimalista moderna','Estilo arquitectónico do séc. XVII de grande ornamentação, curvas e dramatismo','Arquitectura grega de colunas simples','Estilo gótico de arcos apontados'],ans:1,hint:'Bernini, Versalhes — grandiosidade e teatralidade'},
+  {q:'O que é o Movimento dos Direitos Civis nos EUA?',opts:['Guerra de Secessão americana','Movimento dos anos 50-60 que lutou contra a segregação racial e pela igualdade dos afro-americanos','Revolução americana de independência','Movimento sufragista das mulheres'],ans:1,hint:'Martin Luther King, Rosa Parks, Malcolm X'},
+  {q:'O que é a filosofia estoica?',opts:['Filosofia do prazer como bem supremo','Filosofia grega que prega o autocontrolo, a razão e a aceitação do que não se pode controlar','Filosofia do niilismo — a vida é sem sentido','Filosofia política de Platão'],ans:1,hint:'Marco Aurélio, Epicteto, Séneca'},
+  {q:'O que é o surrealismo?',opts:['Movimento realista de arte académica','Movimento artístico do séc. XX inspirado pelo inconsciente e pelos sonhos','Estilo abstracto geométrico','Arte pop americana dos anos 60'],ans:1,hint:'Salvador Dalí, Magritte, André Breton'},
+  {q:'O que é o teatro grego antigo e quais os seus dois géneros principais?',opts:['Teatro de fantoches e mímica','Tragédia (conflito trágico do herói com o destino) e comédia (crítica social e humor)','Teatro lírico e épico','Drama histórico e teatro de rua'],ans:1,hint:'Sófocles, Eurípides, Aristófanes'},
+  {q:'O que é o blues e qual a sua origem?',opts:['Música clássica afro-americana','Género musical surgido no sul dos EUA entre afro-americanos escravizados — expressão de dor e resistência','Música de dança caribenha','Folk music escocesa transplantada para a América'],ans:1,hint:'Robert Johnson, B.B. King — base do rock e jazz'},
+  {q:'O que é a cultura Ubuntu na África subsaariana?',opts:['Língua bantu do sul de África','Filosofia de humanidade colectiva: "Sou porque somos" — valores de comunidade, partilha e humanidade','Sistema político tribal','Religião animista tradicional'],ans:1,hint:'Desmond Tutu popularizou o conceito no Ocidente'},
+  {q:'O que é o cinema noir?',opts:['Cinema de animação em preto e branco','Estilo cinematográfico americano dos anos 40-50 com temas de crime, pessimismo e estética sombria','Documentário social europeu','Cinema experimental de vanguarda'],ans:1,hint:'Casablanca, O Falcão Maltês — detectives e femmes fatales'},
+  {q:'O que foi o Renascimento africano proposto por Thabo Mbeki?',opts:['Renascimento económico pós-apartheid','Visão de revitalização cultural, política e económica do continente africano — identidade e autoconfiança africana','Programa de reparações do colonialismo','Criação de uma federação de estados africanos'],ans:1,hint:'Discurso em Durban 1998 — "Sou Africano"'},
+  {q:'O que é a literatura pós-colonial moçambicana?',opts:['Literatura escrita apenas em línguas locais','Produção literária que reflecte as experiências de independência, guerra e identidade nacional, como em Mia Couto e Paulina Chiziane','Literatura exclusivamente de autores portugueses sobre Moçambique','Géneros literários proibidos após a independência'],ans:1,hint:'Mia Couto — "Terra Sonâmbula"'},
+  {q:'O que caracteriza o movimento artístico do surrealismo?',opts:['Pintura hiper-realista de paisagens','Movimento que explora o inconsciente, sonhos e o irracional na arte e literatura','Estilo arquitectónico minimalista','Técnica fotográfica em preto e branco'],ans:1,hint:'Salvador Dalí, André Breton — anos 1920'},
+  {q:'O que é a Marrabenta enquanto género musical?',opts:['Dança ritual de iniciação','Género musical e de dança originário do sul de Moçambique, fusão de ritmos tradicionais com influências urbanas','Estilo musical exclusivamente religioso','Instrumento de percussão tradicional'],ans:1,hint:'Popularizado em Maputo a partir dos anos 1950'},
+  {q:'O que é a Negritude na literatura africana e caribenha?',opts:['Movimento racista colonial','Movimento literário que celebrava a identidade, cultura e orgulho negros face ao colonialismo','Estilo musical do Caribe','Partido político senegalês'],ans:1,hint:'Aimé Césaire, Senghor, Léon Damas'},
+  {q:'O que é o conceito de "pan-africanismo" cultural?',opts:['União militar de países africanos','Movimento que promove solidariedade, unidade cultural e política entre povos africanos e da diáspora','Política comercial entre África e Europa','Sistema educativo comum a toda a África'],ans:1,hint:'Kwame Nkrumah, Marcus Garvey, W.E.B. Du Bois'},
+  {q:'O que distingue a arte Makonde da escultura tradicional moçambicana em geral?',opts:['Usa apenas metal','Esculturas em madeira de ébano com figuras alongadas e temas espirituais, como os "ujamaa" (árvores da vida)','É exclusivamente pintura mural','Surge apenas no século XXI'],ans:1,hint:'Povo do norte de Moçambique e sul da Tanzânia'},
+  {q:'O que é a Capoeira enquanto expressão cultural?',opts:['Dança de salão europeia','Arte marafro-brasileira que combina luta, dança, música e ritual, com raízes na escravidão','Desporto olímpico moderno','Técnica de defesa pessoal asiática'],ans:1,hint:'Desenvolvida por escravizados africanos no Brasil'},
+  {q:'O que caracteriza o cinema africano contemporâneo segundo realizadores como Ousmane Sembène?',opts:['Imitação directa de Hollywood','Cinema engajado que aborda questões sociais, políticas e identitárias africanas com voz própria','Apenas documentários turísticos','Filmes exclusivamente em línguas europeias'],ans:1,hint:'Sembène é considerado "pai do cinema africano"'},
+  {q:'O que é o "Realismo Mágico" na literatura latino-americana e africana?',opts:['Género de ficção científica','Estilo que mistura elementos fantásticos com a realidade quotidiana de forma natural, sem espanto narrativo','Técnica de pintura hiper-realista','Documentário sobre fenómenos paranormais'],ans:1,hint:'Gabriel García Márquez; também presente em Mia Couto'},
+  {q:'O que distingue a música Timbila dos Chopi em Moçambique?',opts:['É tocada apenas com tambores','Conjunto de xilofones de madeira tocados em orquestra, reconhecido pela UNESCO como Património Cultural Imaterial','Dança sem qualquer instrumento musical','Género musical exclusivamente religioso cristão'],ans:1,hint:'Tradicional da província de Inhambane'},
+],
+hard:[
+  {q:'O que é a teoria mimética de René Girard?',opts:['Teoria da imitação na aprendizagem infantil','Teoria que o desejo humano é fundamentalmente mimético — desejamos o que o outro deseja, gerando rivalidade e violência resolvida pelo bode expiatório','Teoria estética da arte como imitação da natureza','Análise da mídia como espelho da sociedade'],ans:1,hint:'"O Bode Expiatório" — base da antropologia cultural de Girard'},
+  {q:'O que é o pós-estruturalismo e como difere do estruturalismo?',opts:['São sinónimos filosóficos','Estruturalismo buscava estruturas fixas; pós-estruturalismo (Derrida, Foucault) questiona a estabilidade das estruturas e dos significados','Pós-estruturalismo é mais conservador','Estruturalismo surgiu depois do pós-estruturalismo'],ans:1,hint:'Derrida — desconstrução; Foucault — genealogia do poder'},
+  {q:'O que é o conceito de "indústria cultural" de Adorno e Horkheimer?',opts:['Sistema de incentivos à arte independente','Crítica ao capitalismo que transforma a cultura em mercadoria padronizada, manipulando as massas e destruindo o pensamento crítico','Teoria do desenvolvimento cultural progressivo','Análise do papel das instituições na promoção da arte'],ans:1,hint:'Escola de Frankfurt — "Dialéctica do Iluminismo" 1944'},
+  {q:'O que é o conceito de "habitus" de Pierre Bourdieu?',opts:['Habitat cultural de uma comunidade','Sistema de disposições duráveis adquiridas na socialização que orientam inconscientemente as acções e percepções do indivíduo','Regras explícitas de comportamento social','Capital cultural acumulado pelas elites'],ans:1,hint:'Campo + capital + habitus = prática social'},
+  {q:'O que é a hermenêutica filosófica de Gadamer?',opts:['Ciência de tradução de textos antigos','Teoria da compreensão baseada no diálogo entre o texto e o intérprete mediado pelo horizonte histórico de cada um','Método de análise literária estrutural','Crítica à interpretação subjectiva dos textos'],ans:1,hint:'"Verdade e Método" — fusão de horizontes'},
+  {q:'O que é a "morte do autor" de Roland Barthes?',opts:['Censura de autores pelo Estado','Tese de que o significado de um texto não é determinado pela intenção do autor mas pela leitura do leitor','Teoria da autoria colectiva na literatura','Análise do anonimato na literatura medieval'],ans:1,hint:'1967 — liberta o texto da intenção autoral'},
+  {q:'O que é o conceito de "rizoma" em Deleuze e Guattari?',opts:['Estrutura hierárquica em árvore do pensamento','Modelo de pensamento não-hierárquico e não-linear, sem centro nem periferia, que se expande em todas as direcções','Sistema de raízes do subconsciente freudiano','Estrutura modular da linguagem'],ans:1,hint:'"Mil Planaltos" — oposto ao pensamento arborescente'},
+  {q:'O que é o orientalismo segundo Edward Said?',opts:['Estudo académico neutro das culturas orientais','Construção discursiva ocidental que representou o Oriente como exótico, inferior e necessitado de domínio — legitimando o colonialismo','Sistema filosófico do confucionismo','Arte asiática influenciada por contacto com o Ocidente'],ans:1,hint:'"Orientalismo" 1978 — base dos Estudos Pós-Coloniais'},
+  {q:'O que é a "virada linguística" na filosofia do séc. XX?',opts:['Reforma do sistema de escrita ocidental','Reorientação da filosofia para a análise da linguagem como condição do pensamento e da realidade','Movimento de simplificação da gramática académica','Criação de linguagens formais para a matemática'],ans:1,hint:'Wittgenstein, Frege, Saussure — a linguagem como horizonte'},
+  {q:'O que é a estética do sublime em Kant?',opts:['Experiência do belo harmónico na natureza','Experiência de confronto com o que supera a nossa capacidade de compreensão, gerando ao mesmo tempo terror e elevação moral','Teoria da arte como expressão da genialidade','Critério de julgamento do belo baseado na utilidade'],ans:1,hint:'Crítica do Juízo — montanhas, tempestades, o infinito'},
+  {q:'O que é o conceito de "esfera pública" de Habermas?',opts:['Espaço físico de manifestações políticas','Espaço de debate racional entre cidadãos livres e iguais que forma a opinião pública e legitima as decisões políticas','Sistema mediático controlado pelo Estado','Arena de disputa de poder entre elites'],ans:1,hint:'"Mudança Estrutural da Esfera Pública" 1962'},
+  {q:'O que é a "gramática gerativa" de Chomsky?',opts:['Gramática normativa para ensino do inglês','Teoria de que os humanos têm uma faculdade inata da linguagem — uma gramática universal subjacente a todas as línguas','Sistema de regras gramaticais construído culturalmente','Análise estrutural das línguas africanas'],ans:1,hint:'Sintaxe — LAD (Language Acquisition Device)'},
+  {q:'O que é o conceito de "campo" em Bourdieu?',opts:['Espaço físico de práticas desportivas','Espaço social estruturado de posições onde agentes competem por formas específicas de capital (económico, cultural, social, simbólico)','Sistema de relações familiares','Arena política formal'],ans:1,hint:'Campo literário, campo académico, campo político — cada um com as suas regras'},
+  {q:'O que é a fenomenologia de Husserl?',opts:['Estudo dos fenómenos naturais','Método filosófico de análise rigorosa da experiência consciente — epoché: suspender pressupostos para descrever a consciência pura','Teoria do conhecimento baseada na experiência empírica','Psicologia experimental do comportamento'],ans:1,hint:'Intencionalidade — a consciência é sempre consciência DE algo'},
+  {q:'O que é o "simulacro" em Baudrillard?',opts:['Cópia fiel de uma obra de arte','Representação que substitui e supera o real — a imagem já não representa nada, ela é a realidade (hiper-realidade)','Técnica de ilusão teatral','Simulação computacional da realidade'],ans:1,hint:'"Simulacra e Simulação" — a Disneylândia é mais real que a América real'},
+  {q:'O que é o conceito de "habitus" em Pierre Bourdieu?',opts:['Hábito consciente e deliberado','Sistema de disposições duráveis, adquiridas socialmente, que estruturam as percepções e práticas de um indivíduo sem que ele tenha plena consciência disso','Costume jurídico tradicional','Rotina diária de trabalho'],ans:1,hint:'Combina estrutura social e agência individual'},
+  {q:'O que distingue a estética do "Kitsch" segundo a crítica cultural?',opts:['Arte de elevado valor técnico e original','Produção cultural sentimentalista e imitativa, vista como degradação da arte autêntica em favor do consumo fácil','Movimento artístico de vanguarda','Estilo arquitectónico minimalista'],ans:1,hint:'Termo popularizado por Clement Greenberg'},
+  {q:'O que é a "desconstrução" em Jacques Derrida?',opts:['Demolição literal de edifícios históricos','Método filosófico de análise crítica de textos que revela contradições internas e hierarquias ocultas no significado','Reforma educativa francesa','Técnica de composição musical atonal'],ans:1,hint:'Questiona oposições binárias como presença/ausência'},
+  {q:'O que caracteriza a "estética relacional" de Nicolas Bourriaud?',opts:['Arte focada exclusivamente na forma','Arte contemporânea que valoriza as relações sociais e interacções humanas geradas pela obra, mais do que o objecto em si','Pintura figurativa clássica','Escultura monumental pública'],ans:1,hint:'Obra de 1998 — a arte como espaço de encontro'},
+  {q:'O que é a "morte do autor" segundo Roland Barthes?',opts:['Teoria sobre a vida biográfica de escritores','Ideia de que o significado de um texto não depende da intenção do autor, mas é construído pelo leitor','Movimento literário sobre a mortalidade','Censura de obras de autores falecidos'],ans:1,hint:'Ensaio de 1967 — liberta a interpretação do texto'},
+  {q:'O que é a teoria do "orientalismo" de Edward Said?',opts:['Estudo neutro das culturas orientais','Crítica às representações ocidentais estereotipadas e essencialistas do "Oriente", usadas para justificar dominação colonial','Movimento artístico inspirado na Ásia','Filosofia religiosa budista'],ans:1,hint:'Obra "Orientalismo" (1978)'},
+  {q:'O que é a "performatividade" segundo Judith Butler?',opts:['Capacidade física de realizar acções','Ideia de que identidades como género não são essências fixas, mas constituídas através de repetição de actos e discursos sociais','Teoria sobre artes performativas no teatro','Sistema de avaliação de desempenho académico'],ans:1,hint:'"Gender Trouble" (1990) — género como performance social'},
+  {q:'O que é o conceito de "heterotopia" em Michel Foucault?',opts:['Utopia inalcançável','Espaços reais que funcionam como "outros lugares" dentro da sociedade, com regras próprias — como prisões, cemitérios, navios','Sociedade ideal imaginária','Teoria sobre migração internacional'],ans:1,hint:'Ensaio "Des espaces autres" (1967)'},
+  {q:'O que caracteriza a crítica decolonial à produção do conhecimento académico?',opts:['Rejeita totalmente qualquer conhecimento científico','Argumenta que o conhecimento ocidental moderno se apresenta como universal, mas é situado e historicamente ligado ao colonialismo, propondo "epistemologias do Sul"','Defende que só existe um tipo válido de ciência','É um movimento puramente literário sem implicações académicas'],ans:1,hint:'Boaventura de Sousa Santos, Walter Mignolo'},
+  {q:'O que é a "intertextualidade" em teoria literária?',opts:['Tradução de um texto para outra língua','Relação pela qual um texto dialoga, cita ou reformula outros textos anteriores, sendo o significado construído nessa rede de referências','Técnica de revisão ortográfica','Análise estatística de vocabulário'],ans:1,hint:'Conceito desenvolvido por Julia Kristeva nos anos 1960'},
+]
+}
+};
+
+// ===== STATE =====
+let gameMode='solo', selLevel='easy', selCat=null;
+let questions=[], curQ=0, llUsed={}, curPlayer=1, scores={1:0,2:0}, pNames={1:'J1',2:'J2'};
+let statsCorrect=0, statsWrong=0, statsSkip=0;
+const MAX_ERROS=3;
+let qTimerInterval=null, timeLeft=30;
+let duelTimerInt={1:null,2:null}, duelTimeLeft={1:30,2:30};
+
+// ===== NAV =====
+function goScreen(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('sc-'+n).classList.add('active');if(n!=='game'){const dw=document.getElementById('duel-wrap');if(dw)dw.style.display='none';}}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+
+function pickMode(m){
+  gameMode=m;
+  goScreen('level');
+}
+function pickLevel(l){
+  selLevel=l;
+  buildCatGrid();
+  goScreen('cat');
+}
+function buildCatGrid(){
+  const g=document.getElementById('cat-grid');
+  g.innerHTML='';
+  CATS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='sel-card';
+    d.innerHTML=`<div class="icon">${c.icon}</div><h3>${c.name}</h3>`;
+    d.onclick=()=>{
+      document.querySelectorAll('#cat-grid .sel-card').forEach(x=>x.classList.remove('active'));
+      d.classList.add('active');
+      selCat=c.id;
+      document.getElementById('start-btn').disabled=false;
+    };
+    g.appendChild(d);
+  });
+}
+function startGame(){
+  if(!selCat)return;
+  curQ=0; llUsed={'5050':false,skip:false,hint:false,time:false};
+  curPlayer=1; scores={1:0,2:0};
+  statsCorrect=0; statsWrong=0; statsSkip=0;
+
+  const pool=QDB[selCat][selLevel];
+  questions=shuffle(pool).slice(0,Math.min(25,pool.length));
+
+  const sb=document.getElementById('score-bar');
+  const ti=document.getElementById('turn-ind');
+  const dw=document.getElementById('duel-wrap');
+  const normalEls=['qbox','ans-grid','qtimer'];
+  const lifelines=document.querySelector('.lifelines');
+  const hintBox=document.getElementById('hint-box');
+  if(gameMode==='duo'){
+    pNames[1]=prompt('Nome do Jogador 1:','Jogador 1')||'Jogador 1';
+    pNames[2]=prompt('Nome do Jogador 2:','Jogador 2')||'Jogador 2';
+    sb.style.display='none'; ti.style.display='none';
+    document.getElementById('p1n').textContent=pNames[1];
+    document.getElementById('p2n').textContent=pNames[2];
+    normalEls.forEach(id=>document.getElementById(id).style.display='none');
+    lifelines.style.display='none';
+    hintBox.style.display='none';
+    document.getElementById('qlevel').parentElement.style.display='none';
+    dw.style.display='flex';
+  } else {
+    sb.style.display='none'; ti.style.display='none';
+    normalEls.forEach(id=>document.getElementById(id).style.display='');
+    lifelines.style.display='flex';
+    document.getElementById('qlevel').parentElement.style.display='';
+    dw.style.display='none';
+  }
+  resetLL();
+  goScreen('game');
+  renderQ();
+}
+function renderQ(){
+  if(gameMode==='duo'){ renderDuel(); return; }
+  const q=questions[curQ];
+  document.getElementById('qlevel').textContent=`Pergunta ${curQ+1} de ${questions.length}`;
+  document.getElementById('qlives').textContent='❤️'.repeat(MAX_ERROS-statsWrong);
+  document.getElementById('prog').style.width=((curQ/questions.length)*100)+'%';
+  document.getElementById('hint-box').style.display='none';
+
+  // diff badge
+  const diffColors={'easy':'var(--easy)','medium':'var(--medium)','hard':'var(--hard)'};
+  const diffLabels={'easy':'🟢 Fácil','medium':'🟡 Médio','hard':'🔴 Difícil'};
+  document.getElementById('diff-badge').innerHTML=`<span class="diff-badge" style="color:${diffColors[selLevel]};border-color:${diffColors[selLevel]}">${diffLabels[selLevel]}</span>`;
+  document.getElementById('qtext').textContent=q.q;
+
+  const grid=document.getElementById('ans-grid');
+  grid.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const b=document.createElement('button');
+    b.className='ans-btn'; b.id='a'+i;
+    b.innerHTML=`<span class="ltr">${l}</span>${q.opts[i]}`;
+    b.onclick=()=>pick(i);
+    grid.appendChild(b);
+  });
+  startTimer();
+}
+function renderDuel(){
+  curPlayer=1;
+  renderDuelTurn();
+}
+function renderDuelTurn(){
+  document.getElementById('duel-prog-1').style.width=((curQ/questions.length)*100)+'%';
+  document.getElementById('duel-prog-2').style.width=((curQ/questions.length)*100)+'%';
+  const q=questions[curQ];
+  const diffColors={'easy':'var(--easy)','medium':'var(--medium)','hard':'var(--hard)'};
+  const diffLabels={'easy':'🟢 Fácil','medium':'🟡 Médio','hard':'🔴 Difícil'};
+  const badgeHtml=`<span class="diff-badge" style="color:${diffColors[selLevel]};border-color:${diffColors[selLevel]}">${diffLabels[selLevel]}</span>`;
+
+  [1,2].forEach(p=>{
+    document.getElementById('duel-score-'+p).textContent=`${pNames[p]}: ${scores[p]} pts`;
+    if(p===curPlayer){
+      document.getElementById('diff-badge-'+p).innerHTML=badgeHtml;
+      document.getElementById('qtext-'+p).textContent=q.q;
+      document.getElementById('duel-timer-'+p).textContent='⏱️ 30s';
+      document.getElementById('duel-timer-'+p).classList.remove('warn');
+      const grid=document.getElementById('ans-grid-'+p);
+      grid.innerHTML='';
+      ['A','B','C','D'].forEach((l,i)=>{
+        const b=document.createElement('button');
+        b.className='ans-btn'; b.id='a'+i+'-'+p;
+        b.innerHTML=`<span class="ltr">${l}</span>${q.opts[i]}`;
+        b.onclick=()=>pickDuel(p,i);
+        grid.appendChild(b);
+      });
+    } else {
+      document.getElementById('diff-badge-'+p).innerHTML='';
+      document.getElementById('qtext-'+p).textContent=`⏳ Aguarda a vez de ${pNames[curPlayer]}...`;
+      document.getElementById('ans-grid-'+p).innerHTML='';
+      document.getElementById('duel-timer-'+p).textContent='';
+    }
+  });
+  startDuelPlayerTimer(curPlayer);
+}
+function startTimer(){
+  clearInterval(qTimerInterval);
+  timeLeft=30;
+  updateTimerDisplay();
+  qTimerInterval=setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){
+      clearInterval(qTimerInterval);
+      timeUp();
+    }
+  },1000);
+}
+function updateTimerDisplay(){
+  const el=document.getElementById('qtimer');
+  if(!el)return;
+  el.textContent='⏱️ '+timeLeft+'s';
+  el.classList.toggle('warn',timeLeft<=10);
+}
+function startDuelPlayerTimer(p){
+  clearInterval(duelTimerInt[1]); clearInterval(duelTimerInt[2]);
+  duelTimeLeft[p]=30;
+  updateDuelPlayerTimerDisplay(p);
+  duelTimerInt[p]=setInterval(()=>{
+    duelTimeLeft[p]--;
+    updateDuelPlayerTimerDisplay(p);
+    if(duelTimeLeft[p]<=0){
+      clearInterval(duelTimerInt[p]);
+      duelTimeUp(p);
+    }
+  },1000);
+}
+function updateDuelPlayerTimerDisplay(p){
+  const el=document.getElementById('duel-timer-'+p);
+  if(!el)return;
+  el.textContent='⏱️ '+duelTimeLeft[p]+'s';
+  el.classList.toggle('warn',duelTimeLeft[p]<=10);
+}
+function pickDuel(player,idx){
+  if(player!==curPlayer)return;
+  clearInterval(duelTimerInt[player]);
+  const q=questions[curQ];
+  const cor=q.ans;
+  document.querySelectorAll('#ans-grid-'+player+' .ans-btn').forEach(b=>b.disabled=true);
+  if(idx===cor){
+    document.getElementById('a'+idx+'-'+player).classList.add('correct');
+    scores[player]++;
+    statsCorrect++;
+  } else {
+    document.getElementById('a'+idx+'-'+player).classList.add('wrong');
+    document.getElementById('a'+cor+'-'+player).classList.add('correct');
+    statsWrong++;
+  }
+  document.getElementById('duel-score-'+player).textContent=`${pNames[player]}: ${scores[player]} pts`;
+  advanceDuelTurn();
+}
+function duelTimeUp(player){
+  const q=questions[curQ];
+  document.querySelectorAll('#ans-grid-'+player+' .ans-btn').forEach(b=>b.disabled=true);
+  document.getElementById('a'+q.ans+'-'+player).classList.add('correct');
+  statsWrong++;
+  advanceDuelTurn();
+}
+function advanceDuelTurn(){
+  setTimeout(()=>{
+    curQ++;
+    curPlayer=(curPlayer===1?2:1);
+    if(curQ>=questions.length){showResult(true);}
+    else{renderDuelTurn();}
+  },1300);
+}
+function timeUp(){
+  const q=questions[curQ];
+  document.querySelectorAll('.ans-btn').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.ll-btn').forEach(b=>b.disabled=true);
+  document.getElementById('a'+q.ans).classList.add('correct');
+  statsWrong++;
+  if(statsWrong>=MAX_ERROS){
+    setTimeout(()=>showResult(false),1400);
+  } else {
+    setTimeout(()=>{
+      curQ++;
+      if(curQ>=questions.length){showResult(true);}
+      else{if(gameMode==='duo')curPlayer=curPlayer===1?2:1;resetLL();renderQ();}
+    },1400);
+  }
+}
+function pick(idx){
+  clearInterval(qTimerInterval);
+  const q=questions[curQ];
+  document.querySelectorAll('.ans-btn').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.ll-btn').forEach(b=>b.disabled=true);
+  const cor=q.ans;
+  if(idx===cor){
+    document.getElementById('a'+idx).classList.add('correct');
+    statsCorrect++;
+    if(gameMode==='duo'){scores[curPlayer]++;updScore();}
+    setTimeout(()=>{
+      curQ++;
+      if(curQ>=questions.length){showResult(true);}
+      else{if(gameMode==='duo')curPlayer=curPlayer===1?2:1;resetLL();renderQ();}
+    },1100);
+  } else {
+    document.getElementById('a'+idx).classList.add('wrong');
+    document.getElementById('a'+cor).classList.add('correct');
+    statsWrong++;
+    if(statsWrong>=MAX_ERROS){
+      setTimeout(()=>showResult(false),1400);
+    } else {
+      setTimeout(()=>{
+        curQ++;
+        if(curQ>=questions.length){showResult(true);}
+        else{if(gameMode==='duo')curPlayer=curPlayer===1?2:1;resetLL();renderQ();}
+      },1400);
+    }
+  }
+}
+function updScore(){
+  document.getElementById('p1s').textContent=scores[1];
+  document.getElementById('p2s').textContent=scores[2];
+}
+function resetLL(){
+  ['5050','skip','hint','time'].forEach(k=>{
+    const b=document.getElementById('ll-'+k);
+    if(b) b.disabled=!!llUsed[k];
+  });
+}
+function useLL(t){
+  if(llUsed[t])return;
+  llUsed[t]=true;
+  document.getElementById('ll-'+t).disabled=true;
+  const q=questions[curQ];
+  if(t==='5050'){
+    const wrong=[0,1,2,3].filter(i=>i!==q.ans);
+    shuffle(wrong).slice(0,2).forEach(i=>{
+      const b=document.getElementById('a'+i);
+      b.style.opacity='0.12'; b.disabled=true;
+    });
+  }
+  if(t==='skip'){
+    statsSkip++;
+    curQ++;
+    if(curQ>=questions.length){clearInterval(qTimerInterval);showResult(true);}
+    else{resetLL();renderQ();}
+  }
+  if(t==='hint'){
+    const hb=document.getElementById('hint-box');
+    hb.textContent='💡 Dica: '+q.hint;
+    hb.style.display='block';
+  }
+  if(t==='time'){
+    timeLeft+=30;
+    updateTimerDisplay();
+  }
+}
+function showResult(won){
+  clearInterval(qTimerInterval);
+  clearInterval(duelTimerInt[1]);
+  clearInterval(duelTimerInt[2]);
+  document.getElementById('res-trophy').textContent=won?'🏆':'😔';
+  document.getElementById('st-correct').textContent=statsCorrect;
+  document.getElementById('st-wrong').textContent=statsWrong;
+  document.getElementById('st-skip').textContent=statsSkip;
+
+  const lvlLabel={'easy':'Fácil','medium':'Médio','hard':'Difícil'};
+  if(won){
+    document.getElementById('res-msg').textContent=`Parabéns! Completaste o nível ${lvlLabel[selLevel]} com sucesso!`;
+    launchConfetti();
+  } else {
+    document.getElementById('res-msg').textContent=statsWrong>=MAX_ERROS?`Atingiste o limite de ${MAX_ERROS} erros. Estuda e tenta de novo!`:'Não foi esta vez. Estuda e tenta de novo!';
+  }
+
+  const dr=document.getElementById('duo-result');
+  if(gameMode==='duo'){
+    dr.style.display='block';
+    const winner=scores[1]>scores[2]?pNames[1]:scores[2]>scores[1]?pNames[2]:'Empate!';
+    document.getElementById('duo-scores').innerHTML=`
+      <div class="stat-item"><div class="s-lbl">${pNames[1]}</div><div class="s-val">${scores[1]}</div></div>
+      <div class="stat-item"><div class="s-lbl">${pNames[2]}</div><div class="s-val">${scores[2]}</div></div>`;
+    document.getElementById('duo-winner').textContent=winner==='Empate!'?'🤝 Empate!':'🏆 Vencedor: '+winner;
+  } else dr.style.display='none';
+
+  goScreen('result');
+}
+function confirmQuit(){
+  if(confirm('Queres mesmo sair do jogo?')){showResult(false);}
+}
+function restartGame(){
+  selCat=null;
+  document.getElementById('start-btn').disabled=true;
+  buildCatGrid();
+  goScreen('cat');
+}
+function launchConfetti(){
+  const cols=['#FFD700','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD'];
+  for(let i=0;i<80;i++){
+    setTimeout(()=>{
+      const e=document.createElement('div');
+      e.className='confetti-piece';
+      e.style.cssText=`left:${Math.random()*100}vw;background:${cols[Math.floor(Math.random()*cols.length)]};width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;animation-duration:${Math.random()*2+2}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+      document.body.appendChild(e);
+      setTimeout(()=>e.remove(),4000);
+    },i*40);
+  }
+}
+</script>
+</body>
+</html>
